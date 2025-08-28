@@ -173,11 +173,12 @@ class HelperWorkflow
 
     puts ""
     puts "🔧 Available Commands:"
-    puts "  • sync         → Prepare helpers for deployment"
     puts "  • validate     → Check helper compliance"  
-    puts "  • deploy       → Push to Gist for remote access"
+    puts "  • deploy       → Validate and push to Gist for remote access"
     puts "  • create NAME  → Create new helper from template"
     puts "  • status       → Show this status"
+    puts ""
+    puts "💡 The 'sync' command is no longer needed since the repo is already flat!"
   end
 
   def run(command, *args)
