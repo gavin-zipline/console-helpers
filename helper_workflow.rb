@@ -21,7 +21,7 @@ class HelperWorkflow
 
   def sync_to_gist
     puts "🔄 Syncing helpers to Gist (remote console source)..."
-    
+
     validate_directory
     helper_files = Dir.glob(File.join(@console_helpers_dir, '*_helper.rb'))
 
@@ -36,7 +36,7 @@ class HelperWorkflow
 
   def validate_helpers
     puts "🔍 Validating helper compliance..."
-    
+
     validate_directory
     helper_files = Dir.glob(File.join(@console_helpers_dir, '*_helper.rb'))
     issues = []
@@ -89,7 +89,7 @@ class HelperWorkflow
       Dir.chdir(@console_helpers_dir) do
         system("git add *_helper.rb *.md HELPER_TEMPLATE*.rb")
         system("git commit -m '#{commit_message}' || echo 'No changes to commit'")
-        
+
         puts "🌐 Pushing to Gist (remote console source)..."
         success = system("git push")
 
@@ -120,13 +120,13 @@ class HelperWorkflow
     end
 
     template = File.read(template_path)
-    
+
     # Replace template placeholders
     constant_name = helper_name.upcase.gsub('_HELPER', '')
     display_name = name.split(/[_\s]/).map(&:capitalize).join(' ')
 
     new_content = template.gsub(/EXAMPLE_HELPER_VERSION/, "#{constant_name}_HELPER_VERSION")
-                         .gsub(/example_helper_cheatsheet/, "#{helper_name}_cheatsheet") 
+                         .gsub(/example_helper_cheatsheet/, "#{helper_name}_cheatsheet")
                          .gsub(/EXAMPLE HELPER/, "#{display_name.upcase} HELPER")
                          .gsub(/Example Helper/, display_name)
                          .gsub(/find_example_record/, "find_#{helper_name.gsub('_helper', '')}")
@@ -159,7 +159,7 @@ class HelperWorkflow
 
     puts "📁 Location: #{@console_helpers_dir}"
     puts "📦 Helper files: #{helper_files.size}"
-    
+
     unless helper_files.empty?
       puts ""
       puts "🔧 Available Helpers:"
@@ -173,7 +173,7 @@ class HelperWorkflow
 
     puts ""
     puts "🔧 Available Commands:"
-    puts "  • validate     → Check helper compliance"  
+    puts "  • validate     → Check helper compliance"
     puts "  • deploy       → Validate and push to Gist for remote access"
     puts "  • create NAME  → Create new helper from template"
     puts "  • status       → Show this status"
