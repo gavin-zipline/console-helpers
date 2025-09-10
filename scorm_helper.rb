@@ -6,7 +6,7 @@
 # Usage: Load via `gh("scorm")` then use `scorm_cheatsheet` for docs
 # Safety: Read-only analysis functions, safe for production use
 
-SCORM_HELPER_VERSION = "1.0.0"
+SCORM_HELPER_VERSION = "1.0.1"
 
 require 'uri'
 require 'cgi'
@@ -55,7 +55,7 @@ def download_scorm_file_info(training_file)
 
   # Add org prefix check for S3 path
   org_prefix = "aeo"  # Based on your S3 console screenshot
-  
+
   puts "\n💻 AWS CLI Commands:"
   puts "# Try with org prefix (recommended based on S3 console):"
   puts "aws s3 cp s3://#{bucket}/#{org_prefix}/#{key} ./#{training_file.filename}"
@@ -72,12 +72,12 @@ end
 def diagnose_missing_s3_file(training_file)
   puts "🔍 Diagnosing S3 file location for: #{training_file.filename}"
   puts ""
-  
+
   key = training_file.attachment_blob.key
   puts "🔑 Blob Key: #{key}"
   puts "📊 File Size: #{training_file.attachment_blob.byte_size} bytes"
   puts ""
-  
+
   # Check S3 URL for path hints
   s3_url = training_file.s3_url
   if s3_url
@@ -86,11 +86,11 @@ def diagnose_missing_s3_file(training_file)
     puts "🌐 S3 URL Path: #{extracted_path}"
     puts "Full URL: #{s3_url}"
   end
-  
+
   # Try different bucket/path combinations
   bucket = "zipline-production-cloudfront"
   org_prefix = "aeo"  # From your console screenshot
-  
+
   puts ""
   puts "💻 Try these AWS CLI commands:"
   puts ""
@@ -100,26 +100,26 @@ def diagnose_missing_s3_file(training_file)
   puts "# Check if file exists with ls:"
   puts "aws s3 ls s3://#{bucket}/#{org_prefix}/#{key}"
   puts ""
-  
+
   # Check for extracted directory structure
   puts "🗂️ If this is extracted content, try:"
   puts "aws s3 sync s3://#{bucket}/#{org_prefix}/training_files/#{training_file.id}/ ./#{training_file.name}/"
-  
+
   key
 end
 
 def investigate_tiny_scorm_file(training_file)
   puts "🔍 Investigating suspiciously small SCORM file..."
   puts ""
-  
+
   diagnose_missing_s3_file(training_file)
   puts ""
-  
+
   # Check if this might be a reference file
   puts "=== Size Analysis ==="
   size_bytes = training_file.attachment_blob.byte_size
   puts "File size: #{size_bytes} bytes (#{(size_bytes / 1024.0).round(2)} KB)"
-  
+
   if size_bytes < 10.kilobytes
     puts "🚨 EXTREMELY SMALL for SCORM package!"
     puts "   Typical SCORM packages are 1MB+ even when minimal"
@@ -128,16 +128,16 @@ def investigate_tiny_scorm_file(training_file)
     puts "   • Reference/pointer file only"
     puts "   • Failed extraction left stub file"
   end
-  
+
   # Look for the actual SCORM content
   puts ""
   puts "=== Looking for actual SCORM content ==="
-  
+
   # Check if there are other training files with similar names
   similar_files = Training::File.where("filename ILIKE ?", "%denim-dna%")
                                .where.not(id: training_file.id)
                                .order(created_at: :desc)
-  
+
   if similar_files.any?
     puts "📁 Found similar training files:"
     similar_files.each do |file|
@@ -148,28 +148,28 @@ def investigate_tiny_scorm_file(training_file)
     puts ""
     puts "💡 The actual SCORM content might be in one of these files"
   end
-  
+
   training_file
 end
 
 def check_extracted_files(training_file)
   # Check if there are extracted files in a different location
   tf_id = training_file.id
-  
+
   # Common patterns for extracted SCORM files
   possible_paths = [
     "#{tf_id}/index.html",
-    "#{tf_id}/imsmanifest.xml", 
+    "#{tf_id}/imsmanifest.xml",
     "#{tf_id}/scorm/index.html",
     "training_files/#{tf_id}/index.html",
     "aeo/training_files/#{tf_id}/index.html"
   ]
-  
+
   puts "Checking for extracted files at common paths:"
   possible_paths.each do |path|
     puts "  - #{path}"
   end
-  
+
   # Check if the S3 URL pattern gives us clues
   s3_url = training_file.s3_url
   if s3_url
@@ -185,17 +185,17 @@ def check_alternative_storage(training_file)
   # Check if file might be in a different bucket/location
   buckets = [
     "zipline-production-cloudfront",
-    "zipline-production", 
+    "zipline-production",
     "zipline-uploads-production",
     "cdn-retailzipline-com"
   ]
-  
+
   puts "File might be in alternative buckets:"
   buckets.each do |bucket|
     puts "  - s3://#{bucket}/#{training_file.attachment_blob.key}"
     puts "  - s3://#{bucket}/aeo/#{training_file.attachment_blob.key}"
   end
-  
+
   # Check if it's a very old file with different storage pattern
   puts ""
   puts "File age: #{((Time.current - training_file.created_at) / 1.day).round(1)} days"
