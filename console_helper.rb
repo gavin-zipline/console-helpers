@@ -31,7 +31,7 @@ end
 # These helpers were migrated from console_model_tools.rb to ensure model utilities
 # like nested_classes and model summaries are always available when console_helper is loaded.
 disable_return_printing
-CONSOLE_HELPER_VERSION = "0.3.15"
+CONSOLE_HELPER_VERSION = "0.3.16"
 puts "🚀🚀🚀 Loading console_helper.rb — version #{CONSOLE_HELPER_VERSION} 🚀🚀🚀"
 
 module ModelInfo
@@ -105,7 +105,7 @@ def get_helper(name)
 
   candidates.each do |file|
     timestamp = (Time.now.to_f * 1000).to_i
-    url = "https://gist.githubusercontent.com/gavin-zipline/9e8fbd2e1785ce6efcc1eeaa449b4cb8/raw/#{file}?nocache=#{timestamp}"
+    url = "https://gist.githubusercontent.com/gavin-zipline/dcfbfc592ea0e4551453176ff3851ee8/raw/#{file}?nocache=#{timestamp}"
     puts "📡 Trying #{file}..."
     begin
       code = URI.open(url).read
