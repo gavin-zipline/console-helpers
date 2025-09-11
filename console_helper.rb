@@ -1,12 +1,37 @@
 # Console Helper — your safe bootstrap + generic helper methods
 # Loads foundational utilities, shortcuts, and the get_helper system
 # Use `gh("helper_name")` to dynamically load subject-specific helpers (see README.md)
+# == LOADED HELPERS REGISTRY ==
+# Tracks loaded helpers, their versions, and cheatsheet procs
+module ConsoleHelpers
+  @@loaded_helpers = {}
+
+  # Register a helper when loaded
+  def self.register_helper(helper_name, version, cheatsheet_proc)
+    @@loaded_helpers[helper_name] = {
+      version: version,
+      cheatsheet: cheatsheet_proc
+    }
+  end
+
+  # List loaded helpers with version numbers
+  def self.helpers
+    @@loaded_helpers.map { |name, info| "#{name} (v#{info[:version]})" }
+  end
+
+  # Aggregate cheatsheets for all loaded helpers
+  def self.cheatsheets
+    @@loaded_helpers.map do |name, info|
+      "--- #{name} (v#{info[:version]}) ---\n" + info[:cheatsheet].call.to_s
+    end.join("\n\n")
+  end
+end
 
 # == MODEL TOOLS ==
 # These helpers were migrated from console_model_tools.rb to ensure model utilities
 # like nested_classes and model summaries are always available when console_helper is loaded.
 disable_return_printing
-CONSOLE_HELPER_VERSION = "0.3.13"
+CONSOLE_HELPER_VERSION = "0.3.14"
 puts "🚀🚀🚀 Loading console_helper.rb — version #{CONSOLE_HELPER_VERSION} 🚀🚀🚀"
 
 module ModelInfo
@@ -78,17 +103,17 @@ def get_helper(name)
     puts "📡 Trying #{file}..."
     begin
       code = URI.open(url).read
-      eval(code)
-      puts "✅ Loaded #{file} from Gist"
-      return
+    eval(code)
+    puts "✅ Loaded #{file} from Gist"
+    break
     rescue OpenURI::HTTPError
-      next
+    next
     rescue NameError => e
-      puts "💥 NameError while loading #{file}: #{e.message}"
-      return
+    puts "💥 NameError while loading #{file}: #{e.message}"
+    break
     rescue StandardError => e
-      puts "💥 Error loading #{file}: #{e.class} - #{e.message}"
-      return
+    puts "💥 Error loading #{file}: #{e.class} - #{e.message}"
+    break
     end
   end
 
@@ -191,17 +216,17 @@ class ApplicationRecord < ActiveRecord::Base
     max_teams_to_show = 5  # Number of teams to display before truncation
 
     # Helper method to truncate values
-    def truncate_value(value, max_length, max_array_items)
+    truncate_value = lambda do |value, max_length, max_array_items|
       if value.is_a?(String) && value.length > max_length
         "#{value[0...max_length]}..."
       elsif value.is_a?(Array)
         if value.all? { |item| item.is_a?(Hash) }
-          value.map { |hash| hash.transform_values { |v| truncate_value(v, max_length, max_array_items) } }.first(max_array_items)
+          value.map { |hash| hash.transform_values { |v| truncate_value.call(v, max_length, max_array_items) } }.first(max_array_items)
         else
           value.first(max_array_items)
         end
       elsif value.is_a?(Hash)
-        value.transform_values { |v| truncate_value(v, max_length, max_array_items) }
+        value.transform_values { |v| truncate_value.call(v, max_length, max_array_items) }
       else
         value
       end
@@ -211,7 +236,6 @@ class ApplicationRecord < ActiveRecord::Base
     attributes.transform_values do |value|
       case
       when value.is_a?(Array) && value == attributes['recipients']
-        # Show more recipients since each is short
         value.first(max_recipients) + (value.size > max_recipients ? ["..."] : [])
       when value.is_a?(Array) && value == attributes['distribution']
         # Summarize the distribution
@@ -229,7 +253,7 @@ class ApplicationRecord < ActiveRecord::Base
           }
         end + (value.size > max_distribution_items ? ["..."] : [])
       else
-        truncate_value(value, max_length, 5)
+        truncate_value.call(value, max_length, 5)
       end
     end
   end
@@ -302,11 +326,8 @@ end
 class Array
   def dupes
     string_count = Hash.new(0)
-    each do |str|
-      string_count[str] += 1
-    end
-    duplicates = string_count.select { |str, count| count > 1 }.keys
-    return duplicates
+    each { |str| string_count[str] += 1 }
+    string_count.select { |_, count| count > 1 }.keys
   end
 end
 
