@@ -31,7 +31,7 @@ end
 # These helpers were migrated from console_model_tools.rb to ensure model utilities
 # like nested_classes and model summaries are always available when console_helper is loaded.
 disable_return_printing
-CONSOLE_HELPER_VERSION = "0.3.14"
+CONSOLE_HELPER_VERSION = "0.3.15"
 puts "🚀🚀🚀 Loading console_helper.rb — version #{CONSOLE_HELPER_VERSION} 🚀🚀🚀"
 
 module ModelInfo
@@ -51,6 +51,7 @@ module ModelInfo
   alias_method :ass, :association_info
 
   def ass_counts
+    klass_var = self.class.name.underscore
     association_info.map do |name, _details|
       count = begin
         assoc = self.send(name)
@@ -58,7 +59,12 @@ module ModelInfo
       rescue
         0
       end
-      [name, count]
+      snippet = "#{klass_var}_#{name} = #{klass_var}.#{name}"
+      if count > 0
+        [name, [count, snippet]]
+      else
+        [name, 0]
+      end
     end.to_h
   end
 end
@@ -382,6 +388,10 @@ def console_cheatsheet
   puts ""
   puts "• run_history(index)"
   puts "  → Asks for confirmation, then executes the command at the given history index."
+  puts ""
+  puts "• ass_counts"
+  puts "  → Returns a hash where each key is an association name, and the value is either the count (if zero) or an array: [count, copy-paste snippet] for nonzero counts."
+  puts "    Example: {:subscribers=>[301, 'distribution_list_subscribers = distribution_list.subscribers'], :subscriptions=>0, ...}"
   puts ""
   puts "• variablize_url(url) → Generate ID + find line for one URL"
   puts "• variablize_urls([url1, url2, ...]) → Same for multiple"
