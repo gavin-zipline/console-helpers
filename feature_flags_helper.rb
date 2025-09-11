@@ -64,7 +64,7 @@ def flag_enabled_for_team?(feature_flag, team)
 end
 
 def flag_enabled_for_user?(feature_flag, user)
-  Flipper[flag].enabled?(user)
+  Flipper[feature_flag].enabled?(user)
 end
 
 def all_flags_enabled_for_team(team)
