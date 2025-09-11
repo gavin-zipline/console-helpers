@@ -6,7 +6,7 @@
 # These helpers were migrated from console_model_tools.rb to ensure model utilities
 # like nested_classes and model summaries are always available when console_helper is loaded.
 disable_return_printing
-CONSOLE_HELPER_VERSION = "0.3.12"
+CONSOLE_HELPER_VERSION = "0.3.13"
 puts "🚀🚀🚀 Loading console_helper.rb — version #{CONSOLE_HELPER_VERSION} 🚀🚀🚀"
 
 module ModelInfo
@@ -24,6 +24,18 @@ module ModelInfo
     info
   end
   alias_method :ass, :association_info
+
+  def ass_counts
+    association_info.map do |name, _details|
+      count = begin
+        assoc = self.send(name)
+        assoc.respond_to?(:count) ? assoc.count : (assoc ? 1 : 0)
+      rescue
+        0
+      end
+      [name, count]
+    end.to_h
+  end
 end
 
 class Object
