@@ -105,7 +105,7 @@ def get_helper(name)
 
   candidates.each do |file|
     timestamp = (Time.now.to_f * 1000).to_i
-    url = "https://gist.githubusercontent.com/gavin-zipline/dcfbfc592ea0e4551453176ff3851ee8/raw/#{file}?nocache=#{timestamp}"
+    url = "https://raw.githubusercontent.com/gavin-zipline/console-helpers/main/#{file}?nocache=#{timestamp}"
     puts "📡 Trying #{file}..."
     begin
       code = URI.open(url).read
