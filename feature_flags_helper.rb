@@ -1,4 +1,4 @@
-FEATURE_FLAGS_HELPER_VERSION = "0.3.1"
+FEATURE_FLAGS_HELPER_VERSION = "0.3.2"
 HELPER_VERSION = FEATURE_FLAGS_HELPER_VERSION
 
 def feature_flag_actors(feature_flag)
@@ -60,7 +60,7 @@ def flag_enabled_for_org?(feature_flag)
 end
 
 def flag_enabled_for_team?(feature_flag, team)
-  Flipper[flag].enabled?(team)
+  Flipper[feature_flag].enabled?(team)
 end
 
 def flag_enabled_for_user?(feature_flag, user)
