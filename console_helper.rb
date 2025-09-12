@@ -103,6 +103,7 @@ def get_helper(name)
     "#{base}_helper.rb"
   ]
 
+  loaded = false
   candidates.each do |file|
     timestamp = (Time.now.to_f * 1000).to_i
     url = "https://raw.githubusercontent.com/gavin-zipline/console-helpers/main/#{file}?nocache=#{timestamp}"
@@ -111,6 +112,7 @@ def get_helper(name)
       code = URI.open(url).read
       eval(code)
       puts "✅ Loaded #{file} from GitHub repo"
+      loaded = true
       break
     rescue OpenURI::HTTPError
       next
@@ -123,7 +125,7 @@ def get_helper(name)
     end
   end
 
-  puts "❌ Repo file not found for any candidate: #{candidates.join(', ')}"
+  puts "❌ Repo file not found for any candidate: #{candidates.join(', ')}" unless loaded
 end
 alias gh get_helper
 
