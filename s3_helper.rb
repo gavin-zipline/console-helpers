@@ -1,3 +1,9 @@
+S3_HELPER_VERSION = "0.1.0"
+def s3_helper_cheatsheet
+  puts "\n📘 S3 Helper Cheatsheet:"
+  puts "• Add your S3 helper methods here."
+end
+ConsoleHelpers.register_helper("s3", S3_HELPER_VERSION, method(:s3_helper_cheatsheet))
 # S3 Helper for Rails Console
 # ---------------------------
 # Provides a simple way to upload text content (e.g., CSV) to environment-specific S3 buckets
@@ -159,50 +165,50 @@ private
 
 def get_scorm_from_resource(resource)
   puts "🔍 Extracting SCORM data from ResourceLibrary::Resource..."
-  
+
   # Find training file IDs in the resource body
   training_file_ids = resource.body.to_s.scan(/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/).flatten.uniq
-  
+
   if training_file_ids.empty?
     puts "❌ No training file IDs found in resource body"
     return nil
   end
-  
+
   training_file_id = training_file_ids.first
   training_file = Training::File.find_by(id: training_file_id)
-  
+
   if training_file.nil?
     puts "❌ Training file not found: #{training_file_id}"
     return nil
   end
-  
+
   download_scorm_content(training_file)
 end
 
 def get_scorm_from_lesson(lesson)
   puts "🔍 Extracting SCORM data from Learning::ScormLesson..."
-  
+
   if lesson.training_file.nil?
     puts "❌ No training file associated with lesson"
     return nil
   end
-  
+
   download_scorm_content(lesson.training_file)
 end
 
 def download_scorm_content(training_file)
   puts "📥 Downloading SCORM content from training file: #{training_file.filename}"
-  
+
   if !training_file.extracted?
     puts "⚠️ Training file not extracted yet"
     return nil
   end
-  
+
   # Download the original SCORM zip if available
   if training_file.attachment.attached?
     blob = training_file.attachment.blob
     puts "✅ Found original SCORM file: #{blob.filename} (#{(blob.byte_size / 1.megabyte.to_f).round(1)}MB)"
-    
+
     # Return blob data for upload to other environment
     {
       filename: blob.filename.to_s,
@@ -230,32 +236,32 @@ end
 
 def put_scorm_to_lesson(lesson, scorm_data)
   puts "📤 Uploading SCORM content to Learning::ScormLesson..."
-  
+
   if scorm_data.nil? || !scorm_data[:blob]
     puts "❌ Invalid SCORM data provided"
     return nil
   end
-  
+
   begin
     # Create new training file in current environment
     new_training_file = Training::File.new(filename: scorm_data[:filename])
-    
+
     # Attach the blob content
     new_training_file.attachment.attach(
       io: StringIO.new(scorm_data[:blob].download),
       filename: scorm_data[:filename],
       content_type: scorm_data[:content_type]
     )
-    
+
     # Save and trigger extraction
     if new_training_file.save
       lesson.update!(training_file: new_training_file)
-      
+
       puts "✅ SCORM file uploaded successfully"
       puts "   New training file ID: #{new_training_file.id}"
       puts "   Original size: #{(scorm_data[:byte_size] / 1.megabyte.to_f).round(1)}MB"
       puts "   Extraction will begin automatically"
-      
+
       new_training_file
     else
       puts "❌ Failed to save training file: #{new_training_file.errors.full_messages.join(', ')}"

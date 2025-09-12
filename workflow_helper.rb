@@ -1,3 +1,9 @@
+WORKFLOW_HELPER_VERSION = "0.1.0"
+def workflow_helper_cheatsheet
+  puts "\n📘 Workflow Helper Cheatsheet:"
+  puts "• Add your workflow helper methods here."
+end
+ConsoleHelpers.register_helper("workflow", WORKFLOW_HELPER_VERSION, method(:workflow_helper_cheatsheet))
 WORKFLOW_HELPER_VERSION = "0.1.1"
 HELPER_VERSION = WORKFLOW_HELPER_VERSION
 def show_workflow_helper_guide

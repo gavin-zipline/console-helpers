@@ -1,3 +1,9 @@
+VARS_HELPER_VERSION = "0.1.0"
+def vars_helper_cheatsheet
+  puts "\n📘 Vars Helper Cheatsheet:"
+  puts "• Add your vars helper methods here."
+end
+ConsoleHelpers.register_helper("vars", VARS_HELPER_VERSION, method(:vars_helper_cheatsheet))
 # Vars Helper for Zipline
 VARS_HELPER_VERSION = "0.1.0"
 

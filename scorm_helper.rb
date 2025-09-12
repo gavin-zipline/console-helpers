@@ -1,3 +1,9 @@
+SCORM_HELPER_VERSION = "0.1.0"
+def scorm_helper_cheatsheet
+  puts "\n📘 SCORM Helper Cheatsheet:"
+  puts "• Add your SCORM helper methods here."
+end
+ConsoleHelpers.register_helper("scorm", SCORM_HELPER_VERSION, method(:scorm_helper_cheatsheet))
 # ------------------------------------------------------------------------------
 # SCORM Helper
 # ------------------------------------------------------------------------------

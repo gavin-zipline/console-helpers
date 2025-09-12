@@ -1,3 +1,9 @@
+PIPELINE_HELPER_VERSION = "0.1.0"
+def pipeline_helper_cheatsheet
+  puts "\n📘 Pipeline Helper Cheatsheet:"
+  puts "• Add your pipeline helper methods here."
+end
+ConsoleHelpers.register_helper("pipeline", PIPELINE_HELPER_VERSION, method(:pipeline_helper_cheatsheet))
 # ------------------------------------------------------------------------------
 # Pipeline Helper
 # ------------------------------------------------------------------------------

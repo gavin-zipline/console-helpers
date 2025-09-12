@@ -1,3 +1,9 @@
+SIDEKIQ_HELPER_VERSION = "0.1.0"
+def sidekiq_helper_cheatsheet
+  puts "\n📘 Sidekiq Helper Cheatsheet:"
+  puts "• Add your Sidekiq helper methods here."
+end
+ConsoleHelpers.register_helper("sidekiq", SIDEKIQ_HELPER_VERSION, method(:sidekiq_helper_cheatsheet))
 SIDEKIQ_HELPER_VERSION = "0.1.1"
 HELPER_VERSION = SIDEKIQ_HELPER_VERSION
 

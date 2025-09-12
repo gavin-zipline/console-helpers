@@ -1,5 +1,4 @@
 CONSOLE_HELPER_VERSION = "0.3.22"
-
 # == LOADED HELPERS REGISTRY ==
 # Tracks loaded helpers, their versions, and cheatsheet procs
 unless defined?(ConsoleHelpers)
@@ -22,15 +21,29 @@ unless defined?(ConsoleHelpers)
     end
   end
 end
+def get_helper(name)
+  if name.nil? || name.to_s.strip.empty?
+    puts "⚠️  You must pass a name. Try: gh \"workflow\""
+    return
+  end
+
+  base = name.to_s.strip
+
+  candidates = [
+    "#{base}",
+    "#{base}.rb",
+    "#{base}_helper.rb"
+  ]
+
   loaded = false
   candidates.each do |file|
     timestamp = (Time.now.to_f * 1000).to_i
-  url = "https://raw.githubusercontent.com/gavin-zipline/console-helpers/main/#{file}?nocache=#{timestamp}"
-  puts "📡 Trying #{file}..."
-  begin
-  code = URI.open(url).read
-  TOPLEVEL_BINDING.eval(code)
-  puts "✅ Loaded #{file} from GitHub repo"
+    url = "https://raw.githubusercontent.com/gavin-zipline/console-helpers/main/#{file}?nocache=#{timestamp}"
+    puts "📡 Trying #{file}..."
+    begin
+      code = URI.open(url).read
+      TOPLEVEL_BINDING.eval(code)
+      puts "✅ Loaded #{file} from GitHub repo"
       loaded = true
       break
     rescue OpenURI::HTTPError
@@ -44,6 +57,9 @@ end
     end
   end
   puts "❌ Repo file not found for any candidate: #{candidates.join(', ')}" unless loaded
+end
+alias gh get_helper
+
 # Convenience global methods for helpers registry
 def helpers
   ConsoleHelpers.helpers
@@ -51,34 +67,6 @@ end
 
 def cheatsheets
   ConsoleHelpers.cheatsheets
-end
-# Console Helper — your safe bootstrap + generic helper methods
-# Loads foundational utilities, shortcuts, and the get_helper system
-# Use `gh("helper_name")` to dynamically load subject-specific helpers (see README.md)
-# == LOADED HELPERS REGISTRY ==
-# Tracks loaded helpers, their versions, and cheatsheet procs
-module ConsoleHelpers
-  @@loaded_helpers = {}
-
-  # Register a helper when loaded
-  def self.register_helper(helper_name, version, cheatsheet_proc)
-    @@loaded_helpers[helper_name] = {
-      version: version,
-      cheatsheet: cheatsheet_proc
-    }
-  end
-
-  # List loaded helpers with version numbers
-  def self.helpers
-    @@loaded_helpers.map { |name, info| "#{name} (v#{info[:version]})" }
-  end
-
-  # Aggregate cheatsheets for all loaded helpers
-  def self.cheatsheets
-    @@loaded_helpers.map do |name, info|
-      "--- #{name} (v#{info[:version]}) ---\n" + info[:cheatsheet].call.to_s
-    end.join("\n\n")
-  end
 end
 
 # == MODEL TOOLS ==

@@ -1,3 +1,9 @@
+SAML_HELPER_VERSION = "0.1.0"
+def saml_helper_cheatsheet
+  puts "\n📘 SAML Helper Cheatsheet:"
+  puts "• Add your SAML helper methods here."
+end
+ConsoleHelpers.register_helper("saml", SAML_HELPER_VERSION, method(:saml_helper_cheatsheet))
 # Version constant
 SAML_HELPER_VERSION = "0.1.0"
 # ---------------------------------------------------------------------------- #

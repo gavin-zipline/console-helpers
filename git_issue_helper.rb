@@ -1,3 +1,9 @@
+GIT_ISSUE_HELPER_VERSION = "0.1.0"
+def git_issue_helper_cheatsheet
+  puts "\n📘 Git Issue Helper Cheatsheet:"
+  puts "• Add your git issue helper methods here."
+end
+ConsoleHelpers.register_helper("git_issue", GIT_ISSUE_HELPER_VERSION, method(:git_issue_helper_cheatsheet))
 # Git Issue Helper Script
 GIT_ISSUE_HELPER_VERSION = "1.3.9"
 

@@ -1,3 +1,9 @@
+FEATURE_FLAGS_HELPER_VERSION = "0.1.0"
+def feature_flags_helper_cheatsheet
+  puts "\n📘 Feature Flags Helper Cheatsheet:"
+  puts "• Add your feature flags helper methods here."
+end
+ConsoleHelpers.register_helper("feature_flags", FEATURE_FLAGS_HELPER_VERSION, method(:feature_flags_helper_cheatsheet))
 FEATURE_FLAGS_HELPER_VERSION = "0.3.2"
 HELPER_VERSION = FEATURE_FLAGS_HELPER_VERSION
 

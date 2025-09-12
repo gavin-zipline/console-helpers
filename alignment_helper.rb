@@ -1,3 +1,9 @@
+ALIGNMENT_HELPER_VERSION = "0.1.0"
+def alignment_helper_cheatsheet
+  puts "\n📘 Alignment Helper Cheatsheet:"
+  puts "• Add your alignment helper methods here."
+end
+ConsoleHelpers.register_helper("alignment", ALIGNMENT_HELPER_VERSION, method(:alignment_helper_cheatsheet))
 # frozen_string_literal: true
 
 # === ALIGNMENT CONSOLE HELPER ===

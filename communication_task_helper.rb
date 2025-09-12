@@ -1,3 +1,9 @@
+COMMUNICATION_TASK_HELPER_VERSION = "0.1.0"
+def communication_task_helper_cheatsheet
+  puts "\n📘 Communication Task Helper Cheatsheet:"
+  puts "• Add your communication task helper methods here."
+end
+ConsoleHelpers.register_helper("communication_task", COMMUNICATION_TASK_HELPER_VERSION, method(:communication_task_helper_cheatsheet))
 
 
 # communication_task_helper.rb

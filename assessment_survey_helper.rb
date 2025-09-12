@@ -1,3 +1,9 @@
+ASSESSMENT_SURVEY_HELPER_VERSION = "0.1.0"
+def assessment_survey_helper_cheatsheet
+  puts "\n📘 Assessment Survey Helper Cheatsheet:"
+  puts "• Add your assessment survey helper methods here."
+end
+ConsoleHelpers.register_helper("assessment_survey", ASSESSMENT_SURVEY_HELPER_VERSION, method(:assessment_survey_helper_cheatsheet))
 ASSESSMENT_SURVEY_HELPER_VERSION = "0.2.4"
 
 require 'csv'

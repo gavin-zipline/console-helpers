@@ -1,3 +1,9 @@
+SMART_QUERY_HELPER_VERSION = "0.1.0"
+def smart_query_helper_cheatsheet
+  puts "\n📘 Smart Query Helper Cheatsheet:"
+  puts "• Add your smart query helper methods here."
+end
+ConsoleHelpers.register_helper("smart_query", SMART_QUERY_HELPER_VERSION, method(:smart_query_helper_cheatsheet))
 # ------------------------------------------------------------------------------
 # SmartQuery Helper
 # ------------------------------------------------------------------------------

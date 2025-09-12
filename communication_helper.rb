@@ -1,3 +1,9 @@
+COMMUNICATION_HELPER_VERSION = "0.1.0"
+def communication_helper_cheatsheet
+  puts "\n📘 Communication Helper Cheatsheet:"
+  puts "• Add your communication helper methods here."
+end
+ConsoleHelpers.register_helper("communication", COMMUNICATION_HELPER_VERSION, method(:communication_helper_cheatsheet))
 # frozen_string_literal: true
 
 COMMUNICATION_HELPER_VERSION = "0.1.0"
