@@ -1,4 +1,4 @@
-CONSOLE_HELPER_VERSION = "0.3.27"
+CONSOLE_HELPER_VERSION = "0.3.28"
 def cheatsheet
   console_cheatsheet
 end
@@ -80,7 +80,7 @@ class Object
   include ModelInfo
 end
 
-...existing code...
+
 
 require 'open-uri'
 
