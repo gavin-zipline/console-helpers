@@ -214,7 +214,7 @@ end
 #    - Document any special safety considerations
 #
 # 5. Deploy:
-#    - Upload to Gist system
+#    - Upload to GitHub repo (raw file access)
 #    - Test loading via gh("helper_name")
 #    - Verify cheatsheet discovery works
 # ------------------------------------------------------------------------------

@@ -109,21 +109,21 @@ def get_helper(name)
     puts "📡 Trying #{file}..."
     begin
       code = URI.open(url).read
-    eval(code)
-    puts "✅ Loaded #{file} from Gist"
-    break
+      eval(code)
+      puts "✅ Loaded #{file} from GitHub repo"
+      break
     rescue OpenURI::HTTPError
-    next
+      next
     rescue NameError => e
-    puts "💥 NameError while loading #{file}: #{e.message}"
-    break
+      puts "💥 NameError while loading #{file}: #{e.message}"
+      break
     rescue StandardError => e
-    puts "💥 Error loading #{file}: #{e.class} - #{e.message}"
-    break
+      puts "💥 Error loading #{file}: #{e.class} - #{e.message}"
+      break
     end
   end
 
-  puts "❌ Gist file not found for any candidate: #{candidates.join(', ')}"
+  puts "❌ Repo file not found for any candidate: #{candidates.join(', ')}"
 end
 alias gh get_helper
 
