@@ -1,3 +1,47 @@
+# == LOADED HELPERS REGISTRY ==
+# Tracks loaded helpers, their versions, and cheatsheet procs
+unless defined?(ConsoleHelpers)
+  module ConsoleHelpers
+    @@loaded_helpers = {}
+
+    def self.register_helper(helper_name, version, cheatsheet_proc)
+      @@loaded_helpers[helper_name] = {
+        version: version,
+      }
+    end
+
+    def self.helpers
+      @@loaded_helpers.map { |name, info| "#{name} (v#{info[:version]})" }
+    end
+    def self.cheatsheets
+      @@loaded_helpers.map do |name, info|
+        "--- #{name} (v#{info[:version]}) ---\n" + info[:cheatsheet].call.to_s
+      end.join("\n\n")
+    end
+  end
+end
+  loaded = false
+  candidates.each do |file|
+    timestamp = (Time.now.to_f * 1000).to_i
+  url = "https://raw.githubusercontent.com/gavin-zipline/console-helpers/main/#{file}?nocache=#{timestamp}"
+  puts "📡 Trying #{file}..."
+  begin
+  code = URI.open(url).read
+  TOPLEVEL_BINDING.eval(code)
+  puts "✅ Loaded #{file} from GitHub repo"
+      loaded = true
+      break
+    rescue OpenURI::HTTPError
+      next
+    rescue NameError => e
+      puts "💥 NameError while loading #{file}: #{e.message}"
+      break
+    rescue StandardError => e
+      puts "💥 Error loading #{file}: #{e.class} - #{e.message}"
+      break
+    end
+  end
+  puts "❌ Repo file not found for any candidate: #{candidates.join(', ')}" unless loaded
 # Convenience global methods for helpers registry
 def helpers
   ConsoleHelpers.helpers
