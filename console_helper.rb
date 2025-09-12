@@ -32,7 +32,7 @@ end
 # like nested_classes and model summaries are always available when console_helper is loaded.
 disable_return_printing
 CONSOLE_HELPER_VERSION = "0.3.16"
-puts "🚀🚀🚀 Loading console_helper.rb — version #{CONSOLE_HELPER_VERSION} 🚀🚀🚀"
+puts "\n🚀🚀🚀 Loading console_helper.rb — version #{CONSOLE_HELPER_VERSION} 🚀🚀🚀\n"
 
 module ModelInfo
   def association_info
