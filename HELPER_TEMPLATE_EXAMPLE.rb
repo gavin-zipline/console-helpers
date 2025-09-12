@@ -2,6 +2,7 @@
 # Example Helper Template (Team Helper Implementation)
 # ------------------------------------------------------------------------------
 # Purpose: Demonstrates the standard helper structure and patterns
+# NOTE: The first line after comments must be the version constant, e.g. EXAMPLE_HELPER_VERSION = "1.0.0"
 # Usage: Load via `gh("team")` then use `team_cheatsheet` for docs
 # Safety: Read-only by default, destructive operations require confirmation
 

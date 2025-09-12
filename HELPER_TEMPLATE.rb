@@ -2,6 +2,7 @@
 # [HELPER_NAME] Helper Template
 # ------------------------------------------------------------------------------
 # Purpose: [Brief description of what this helper does]
+# NOTE: The first line after comments must be the version constant, e.g. [HELPER_NAME]_HELPER_VERSION = "1.0.0"
 # Usage: Load via `gh("[helper_name]")` then use `[helper_name]_cheatsheet` for docs
 # Safety: [Describe safety features - read-only, confirmation required, etc.]
 

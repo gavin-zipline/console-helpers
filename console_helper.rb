@@ -1,11 +1,14 @@
 CONSOLE_HELPER_VERSION = "0.3.26"
+def cheatsheet
+  console_cheatsheet
+end
 # == LOADED HELPERS REGISTRY ==
 # Tracks loaded helpers, their versions, and cheatsheet procs
 unless defined?(ConsoleHelpers)
   module ConsoleHelpers
     @@loaded_helpers = {}
 
-    def self.register_helper(helper_name, version, cheatsheet_proc)
+    def self.register_helper(helper_name, version, _cheatsheet_proc)
       @@loaded_helpers[helper_name] = {
         version: version,
       }
@@ -21,44 +24,7 @@ unless defined?(ConsoleHelpers)
     end
   end
 end
-def get_helper(name)
-  if name.nil? || name.to_s.strip.empty?
-    puts "⚠️  You must pass a name. Try: gh \"workflow\""
-    return
-  end
-
-  base = name.to_s.strip
-
-  candidates = [
-    "#{base}",
-    "#{base}.rb",
-    "#{base}_helper.rb"
-  ]
-
-  loaded = false
-  candidates.each do |file|
-    timestamp = (Time.now.to_f * 1000).to_i
-    url = "https://raw.githubusercontent.com/gavin-zipline/console-helpers/main/#{file}?nocache=#{timestamp}"
-    puts "📡 Trying #{file}..."
-    begin
-      code = URI.open(url).read
-      TOPLEVEL_BINDING.eval(code)
-      puts "✅ Loaded #{file} from GitHub repo"
-      loaded = true
-      break
-    rescue OpenURI::HTTPError
-      next
-    rescue NameError => e
-      puts "💥 NameError while loading #{file}: #{e.message}"
-      break
-    rescue StandardError => e
-      puts "💥 Error loading #{file}: #{e.class} - #{e.message}"
-      break
-    end
-  end
-  puts "❌ Repo file not found for any candidate: #{candidates.join(', ')}" unless loaded
-end
-alias gh get_helper
+...existing code...
 
 # Convenience global methods for helpers registry
 def helpers
@@ -114,19 +80,7 @@ class Object
   include ModelInfo
 end
 
-Module.class_eval do
-  def nested_classes
-    ObjectSpace.each_object(Class).select do |klass|
-      begin
-        klass.name && klass.name.start_with?("#{self.name}::") && klass.name.count(':') == self.name.count(':') + 2
-      rescue StandardError => e
-        puts "Error processing class #{klass}: #{e}"
-        false
-      end
-    end
-  end
-  alias :nc :nested_classes
-end
+...existing code...
 
 require 'open-uri'
 
@@ -253,11 +207,9 @@ class ApplicationRecord < ActiveRecord::Base
 
   def short_view
     max_length = 100
-    max_recipients = 10  # Increase the limit for recipients
     max_distribution_items = 1  # Show only a summary for distribution
     max_teams_to_show = 5  # Number of teams to display before truncation
 
-    # Helper method to truncate values
     truncate_value = lambda do |value, max_length, max_array_items|
       if value.is_a?(String) && value.length > max_length
         "#{value[0...max_length]}..."
@@ -274,15 +226,14 @@ class ApplicationRecord < ActiveRecord::Base
       end
     end
 
-    # Customize handling for recipients and distribution
     attributes.transform_values do |value|
       case
       when value.is_a?(Array) && value == attributes['recipients']
+        max_recipients = 10
         value.first(max_recipients) + (value.size > max_recipients ? ["..."] : [])
       when value.is_a?(Array) && value == attributes['distribution']
-        # Summarize the distribution
         value.first(max_distribution_items).map do |dist|
-          total_teams_count = dist['teams']&.size || 0  # Safeguard against nil
+          total_teams_count = dist['teams']&.size || 0
           {
             "id" => dist['id'],
             "ref" => dist['ref'],
@@ -305,28 +256,25 @@ end
 class Audited::Audit
   def short_view
     max_length = 100
-    max_recipients = 10  # For recipients-like arrays in changes
-    max_distribution_items = 1  # For summarizing distribution-like data
-    max_teams_to_show = 5  # Number of teams to display before truncation
+    max_distribution_items = 1
+    max_teams_to_show = 5
 
-    # Helper method to truncate values
-    def truncate_value(value, max_length, max_array_items)
+    truncate_value = lambda do |value, max_length, max_array_items|
       if value.is_a?(String) && value.length > max_length
         "#{value[0...max_length]}..."
       elsif value.is_a?(Array)
         if value.all? { |item| item.is_a?(Hash) }
-          value.map { |hash| hash.transform_values { |v| truncate_value(v, max_length, max_array_items) } }.first(max_array_items)
+          value.map { |hash| hash.transform_values { |v| truncate_value.call(v, max_length, max_array_items) } }.first(max_array_items)
         else
           value.first(max_array_items)
         end
       elsif value.is_a?(Hash)
-        value.transform_values { |v| truncate_value(v, max_length, max_array_items) }
+        value.transform_values { |v| truncate_value.call(v, max_length, max_array_items) }
       else
         value
       end
     end
 
-    # Customize handling for `audited_changes`
     audited_changes_summarized = audited_changes.transform_values do |value|
       if value.is_a?(Array) && value.first.is_a?(Hash) && value.first['teams']
         value.first(max_distribution_items).map do |dist|
@@ -343,7 +291,7 @@ class Audited::Audit
           }
         end + (value.size > max_distribution_items ? ["..."] : [])
       else
-        truncate_value(value, max_length, 5)
+        truncate_value.call(value, max_length, 5)
       end
     end
 
@@ -356,7 +304,7 @@ class Audited::Audit
       user_id: self.user_id,
       user_type: self.user_type,
       action: self.action,
-      audited_changes: audited_changes_summarized, # Truncated and summarized `audited_changes`
+      audited_changes: audited_changes_summarized,
       version: self.version,
       created_at: self.created_at,
       remote_address: self.remote_address

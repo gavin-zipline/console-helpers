@@ -5,8 +5,6 @@ def audits_helper_cheatsheet
 end
 ConsoleHelpers.register_helper("audits", AUDITS_HELPER_VERSION, method(:audits_helper_cheatsheet))
 # Audits Console Helper for Zipline
-AUDITS_HELPER_VERSION = "0.1.0"
-HELPER_VERSION = AUDITS_HELPER_VERSION
 
 def audits_helper_version
   puts "🧭 Audits Helper Version: #{AUDITS_HELPER_VERSION}"

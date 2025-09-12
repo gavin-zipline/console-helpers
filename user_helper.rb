@@ -1,7 +1,7 @@
 
-HELPER_VERSION ||= "1.4.0"
+USER_HELPER_VERSION = "1.4.0"
 if defined?(ConsoleHelpers) && respond_to?(:user_helper_cheatsheet)
-  ConsoleHelpers.register_helper("user", HELPER_VERSION, method(:user_helper_cheatsheet))
+  ConsoleHelpers.register_helper("user", USER_HELPER_VERSION, method(:user_helper_cheatsheet))
 end
 
 # == User Console Helper ==
