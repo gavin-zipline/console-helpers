@@ -24,7 +24,7 @@ unless defined?(ConsoleHelpers)
     end
   end
 end
-...existing code...
+## (removed invalid placeholder)
 
 # Convenience global methods for helpers registry
 def helpers
