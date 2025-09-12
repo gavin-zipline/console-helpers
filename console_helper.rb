@@ -1,4 +1,4 @@
-CONSOLE_HELPER_VERSION = "0.3.22"
+CONSOLE_HELPER_VERSION = "0.3.23"
 # == LOADED HELPERS REGISTRY ==
 # Tracks loaded helpers, their versions, and cheatsheet procs
 unless defined?(ConsoleHelpers)
