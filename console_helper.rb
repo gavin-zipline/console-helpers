@@ -1,4 +1,4 @@
-CONSOLE_HELPER_VERSION = "0.3.26"
+CONSOLE_HELPER_VERSION = "0.3.27"
 def cheatsheet
   console_cheatsheet
 end
