@@ -31,7 +31,7 @@ end
 # These helpers were migrated from console_model_tools.rb to ensure model utilities
 # like nested_classes and model summaries are always available when console_helper is loaded.
 disable_return_printing
-CONSOLE_HELPER_VERSION = "0.3.16"
+CONSOLE_HELPER_VERSION = "0.3.17"
 puts "\n🚀🚀🚀 Loading console_helper.rb — version #{CONSOLE_HELPER_VERSION} 🚀🚀🚀\n"
 
 module ModelInfo
