@@ -107,6 +107,7 @@ def get_helper(name)
   candidates.each do |file|
     timestamp = (Time.now.to_f * 1000).to_i
     url = "https://raw.githubusercontent.com/gavin-zipline/console-helpers/main/#{file}?nocache=#{timestamp}"
+    puts
     puts "📡 Trying #{file}..."
     begin
       code = URI.open(url).read
@@ -128,12 +129,6 @@ def get_helper(name)
   puts "❌ Repo file not found for any candidate: #{candidates.join(', ')}" unless loaded
 end
 alias gh get_helper
-
-begin
-  gh "git_issue"
-rescue => e
-  puts "❌ Failed to load git_issue: #{e.message}"
-end
 
 begin
   gh "team"

@@ -1,4 +1,4 @@
-HELPER_VERSION = "1.4.0"
+HELPER_VERSION ||= "1.4.0"
 
 # == User Console Helper ==
 # Tools for investigating and debugging user-related data in the console
