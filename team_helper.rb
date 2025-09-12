@@ -1,5 +1,8 @@
 # == Team Helper for Console ==
-TEAM_HELPER_VERSION = "0.1.7"
+TEAM_HELPER_VERSION ||= "0.1.7"
+if defined?(ConsoleHelpers) && respond_to?(:team_helper_cheatsheet)
+  ConsoleHelpers.register_helper("team", TEAM_HELPER_VERSION, method(:team_helper_cheatsheet))
+end
 
 module TeamHelper
   def find_team(param)

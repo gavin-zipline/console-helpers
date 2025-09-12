@@ -1,4 +1,8 @@
+
 HELPER_VERSION ||= "1.4.0"
+if defined?(ConsoleHelpers) && respond_to?(:user_helper_cheatsheet)
+  ConsoleHelpers.register_helper("user", HELPER_VERSION, method(:user_helper_cheatsheet))
+end
 
 # == User Console Helper ==
 # Tools for investigating and debugging user-related data in the console

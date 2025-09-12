@@ -1,3 +1,11 @@
+# Convenience global methods for helpers registry
+def helpers
+  ConsoleHelpers.helpers
+end
+
+def cheatsheets
+  ConsoleHelpers.cheatsheets
+end
 # Console Helper — your safe bootstrap + generic helper methods
 # Loads foundational utilities, shortcuts, and the get_helper system
 # Use `gh("helper_name")` to dynamically load subject-specific helpers (see README.md)
@@ -31,7 +39,7 @@ end
 # These helpers were migrated from console_model_tools.rb to ensure model utilities
 # like nested_classes and model summaries are always available when console_helper is loaded.
 disable_return_printing
-CONSOLE_HELPER_VERSION = "0.3.20"
+CONSOLE_HELPER_VERSION = "0.3.21"
 puts "\n🚀🚀🚀 Loading console_helper.rb — version #{CONSOLE_HELPER_VERSION} 🚀🚀🚀\n"
 
 module ModelInfo
