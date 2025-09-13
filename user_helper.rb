@@ -1,5 +1,5 @@
 
-USER_HELPER_VERSION = "1.4.0"
+USER_HELPER_VERSION = "1.4.1"
 if defined?(ConsoleHelpers) && respond_to?(:user_helper_cheatsheet)
   ConsoleHelpers.register_helper("user", USER_HELPER_VERSION, method(:user_helper_cheatsheet))
 end
@@ -228,7 +228,7 @@ def align_users_to_org_roles(users)
 end
 
 def user_helper_cheatsheet
-  puts   "\n🚀🚀🚀 USER HELPER — VERSION #{HELPER_VERSION} 🚀🚀🚀"
+  puts   "\n🚀🚀🚀 USER HELPER — VERSION #{USER_HELPER_VERSION} 🚀🚀🚀"
   puts "\n📘 User Helper Cheatsheet:"
   puts "\n🛠 Methods:"
   puts "• find_user(param)                    → Smart finder by ID, email, username, or attribute hash"

@@ -1,4 +1,24 @@
-CONSOLE_HELPER_VERSION = "0.3.28"
+CONSOLE_HELPER_VERSION = "0.3.29"
+def console_cheatsheet
+  puts "\n🧪 Console Helper Cheatsheet"
+  puts "• list_recent_history(count = 25) or lrh(count = 25)"
+  puts "  → Prints the last 'count' commands from IRB history with their index for reference."
+  puts ""
+  puts "• run_history(index)"
+  puts "  → Asks for confirmation, then executes the command at the given history index."
+  puts ""
+  puts "• ass_counts"
+  puts "  → Returns a hash where each key is an association name, and the value is either the count (if zero) or an array: [count, copy-paste snippet] for nonzero counts."
+  puts "    Example: {:subscribers=>[301, 'distribution_list_subscribers = distribution_list.subscribers'], :subscriptions=>0, ...}"
+  puts ""
+  puts "• variablize_url(url) → Generate ID + find line for one URL"
+  puts "• variablize_urls([url1, url2, ...]) → Same for multiple"
+  puts "• variablize_urls_from_clipboard → Extract URLs from clipboard and variablize"
+end
+
+def cheatsheet
+  console_cheatsheet
+end
 def cheatsheet
   console_cheatsheet
 end
