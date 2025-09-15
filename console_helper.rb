@@ -26,9 +26,10 @@ unless defined?(ConsoleHelpers)
   module ConsoleHelpers
     @@loaded_helpers = {}
 
-    def self.register_helper(helper_name, version, _cheatsheet_proc)
+    def self.register_helper(helper_name, version, cheatsheet_proc)
       @@loaded_helpers[helper_name] = {
         version: version,
+        cheatsheet: cheatsheet_proc
       }
     end
 
