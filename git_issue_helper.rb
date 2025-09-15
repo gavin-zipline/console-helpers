@@ -1,11 +1,23 @@
-GIT_ISSUE_HELPER_VERSION = "0.1.0"
-def git_issue_helper_cheatsheet
-  puts "\n📘 Git Issue Helper Cheatsheet:"
-  puts "• Add your git issue helper methods here."
-end
-ConsoleHelpers.register_helper("git_issue", GIT_ISSUE_HELPER_VERSION, method(:git_issue_helper_cheatsheet))
-# Git Issue Helper Script
+disable_return_printing
 GIT_ISSUE_HELPER_VERSION = "1.3.9"
+ConsoleHelpers.register_helper("git_issue", GIT_ISSUE_HELPER_VERSION, method(:git_issue_helper_cheatsheet))
+enable_return_printing
+git_issue_cheatsheet
+
+require 'json'
+def github_graphql(query, variables = {})
+  uri = URI.parse("https://api.github.com/graphql")
+  http = Net::HTTP.new(uri.host, uri.port)
+  http.use_ssl = true
+
+  request = Net::HTTP::Post.new(uri.request_uri)
+  request["Authorization"] = "Bearer #{ENV['GITHUB_PAT']}"
+  request["Content-Type"] = "application/json"
+  request.body = { query: query, variables: variables }.to_json
+
+  response = http.request(request)
+  JSON.parse(response.body)
+end
 
 def git_issue_helper_version
   puts "🧭 Git Issue Helper Version: #{GIT_ISSUE_HELPER_VERSION}"

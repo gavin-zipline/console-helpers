@@ -1,3 +1,4 @@
+disable_return_printing
 CONSOLE_HELPER_VERSION = "0.3.30"
 def console_cheatsheet
   puts "\n🧪 Console Helper Cheatsheet"
@@ -227,17 +228,17 @@ class ApplicationRecord < ActiveRecord::Base
     max_distribution_items = 1  # Show only a summary for distribution
     max_teams_to_show = 5  # Number of teams to display before truncation
 
-    truncate_value = lambda do |value, max_length, max_array_items|
+    truncate_value = lambda do |value, trunc_max_length, trunc_max_array_items|
       if value.is_a?(String) && value.length > max_length
-        "#{value[0...max_length]}..."
+        "#{value[0...trunc_max_length]}..."
       elsif value.is_a?(Array)
         if value.all? { |item| item.is_a?(Hash) }
-          value.map { |hash| hash.transform_values { |v| truncate_value.call(v, max_length, max_array_items) } }.first(max_array_items)
+          value.map { |hash| hash.transform_values { |v| truncate_value.call(v, trunc_max_length, trunc_max_array_items) } }.first(trunc_max_array_items)
         else
-          value.first(max_array_items)
+          value.first(trunc_max_array_items)
         end
       elsif value.is_a?(Hash)
-        value.transform_values { |v| truncate_value.call(v, max_length, max_array_items) }
+        value.transform_values { |v| truncate_value.call(v, trunc_max_length, trunc_max_array_items) }
       else
         value
       end
@@ -276,17 +277,17 @@ class Audited::Audit
     max_distribution_items = 1
     max_teams_to_show = 5
 
-    truncate_value = lambda do |value, max_length, max_array_items|
+    truncate_value = lambda do |value, trunc_max_length, trunc_max_array_items|
       if value.is_a?(String) && value.length > max_length
-        "#{value[0...max_length]}..."
+        "#{value[0...trunc_max_length]}..."
       elsif value.is_a?(Array)
         if value.all? { |item| item.is_a?(Hash) }
-          value.map { |hash| hash.transform_values { |v| truncate_value.call(v, max_length, max_array_items) } }.first(max_array_items)
+          value.map { |hash| hash.transform_values { |v| truncate_value.call(v, trunc_max_length, trunc_max_array_items) } }.first(trunc_max_array_items)
         else
-          value.first(max_array_items)
+          value.first(trunc_max_array_items)
         end
       elsif value.is_a?(Hash)
-        value.transform_values { |v| truncate_value.call(v, max_length, max_array_items) }
+        value.transform_values { |v| truncate_value.call(v, trunc_max_length, trunc_max_array_items) }
       else
         value
       end
@@ -382,22 +383,7 @@ def show_history_item(index)
 end
 alias :shi :show_history_item
 
-def console_cheatsheet
-  puts "\n🧪 Console Helper Cheatsheet"
-  puts "• list_recent_history(count = 25) or lrh(count = 25)"
-  puts "  → Prints the last 'count' commands from IRB history with their index for reference."
-  puts ""
-  puts "• run_history(index)"
-  puts "  → Asks for confirmation, then executes the command at the given history index."
-  puts ""
-  puts "• ass_counts"
-  puts "  → Returns a hash where each key is an association name, and the value is either the count (if zero) or an array: [count, copy-paste snippet] for nonzero counts."
-  puts "    Example: {:subscribers=>[301, 'distribution_list_subscribers = distribution_list.subscribers'], :subscriptions=>0, ...}"
-  puts ""
-  puts "• variablize_url(url) → Generate ID + find line for one URL"
-  puts "• variablize_urls([url1, url2, ...]) → Same for multiple"
-  puts "• variablize_urls_from_clipboard → Extract URLs from clipboard and variablize"
-end
+## ...existing code...
 
 
 SHORTCUTS = {
@@ -549,5 +535,5 @@ class Hash
   end
 end
 
-console_cheatsheet
 enable_return_printing
+cheatsheet

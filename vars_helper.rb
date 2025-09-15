@@ -1,11 +1,21 @@
 VARS_HELPER_VERSION = "0.1.0"
 def vars_helper_cheatsheet
-  puts "\n📘 Vars Helper Cheatsheet:"
-  puts "• Add your vars helper methods here."
+  puts   "\n�🚀🚀 VARS HELPER — VERSION #{VARS_HELPER_VERSION} 🚀🚀🚀"
+  puts "\n�📘 Vars Helper Cheatsheet:"
+  puts "\n🛠 Methods:"
+  puts "• init_variables              → Initializes default objects"
+  puts "• init!                       → Injects variables into the top-level binding"
+  puts "• vars                        → Displays summary table of initialized variables"
+  puts "• org                         → Current org shortname"
+  puts "• so / switch_org             → Switch org"
+  puts "• usc / sc                    → Unsafe/safe console modes"
+  puts "• erp / drp                   → Enable/disable return printing"
 end
 ConsoleHelpers.register_helper("vars", VARS_HELPER_VERSION, method(:vars_helper_cheatsheet))
-# Vars Helper for Zipline
+disable_return_printing
 VARS_HELPER_VERSION = "0.1.0"
+ConsoleHelpers.register_helper("vars", VARS_HELPER_VERSION, method(:vars_helper_cheatsheet))
+# Vars Helper for Zipline
 
 def vars_helper_version
   puts "🧭 Vars Helper Version: #{VARS_HELPER_VERSION}"
@@ -26,17 +36,18 @@ end
 
 vars_helper_version
 vars_helper_cheatsheet
+enable_return_printing
 
 def init_variables
-  user ||= User.employed.last
-  team ||= Team.active.last
-  sa ||= service_account ||= User.service_user
-  hq ||= Team.find_by(id: 1)
-  c ||= comm ||= communication ||= Communication.published.last
-  resource ||= ResourceLibrary::Resource.last
-  doc ||= ResourceLibrary::Document.last
-  group ||= Discuss::Group.last
-  user_context ||= UserContext.new(user, team)
+  user = User.employed.last
+  team = Team.active.last
+  sa = User.service_user
+  hq = Team.find_by(id: 1)
+  comm = Communication.published.last
+  resource = ResourceLibrary::Resource.last
+  doc = ResourceLibrary::Document.last
+  group = Discuss::Group.last
+  user_context = UserContext.new(user, team)
 
   puts "✅ init_variables loaded defaults" unless defined?(Rails::Console) && !Rails.const_defined?("Console")
 

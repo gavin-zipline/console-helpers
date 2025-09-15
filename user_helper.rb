@@ -1,8 +1,5 @@
-
 USER_HELPER_VERSION = "1.4.1"
-if defined?(ConsoleHelpers) && respond_to?(:user_helper_cheatsheet)
-  ConsoleHelpers.register_helper("user", USER_HELPER_VERSION, method(:user_helper_cheatsheet))
-end
+ConsoleHelpers.register_helper("user", USER_HELPER_VERSION, method(:user_helper_cheatsheet))
 
 # == User Console Helper ==
 # Tools for investigating and debugging user-related data in the console
@@ -310,5 +307,6 @@ def users_by_name(names)
   puts "• #{missing_names.size} names did not match any user."
 
   enable_return_printing
+  user_helper_cheatsheet
   found_users
 end
