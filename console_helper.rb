@@ -1,5 +1,4 @@
 CONSOLE_HELPER_VERSION = "0.3.30"
-ConsoleHelpers.register_helper("console", CONSOLE_HELPER_VERSION, method(:console_cheatsheet))
 def console_cheatsheet
   puts "\n🧪 Console Helper Cheatsheet"
   puts "• list_recent_history(count = 25) or lrh(count = 25)"
@@ -41,6 +40,7 @@ module ConsoleHelpers
     end.join("\n\n")
   end
 end
+ConsoleHelpers.register_helper("console", CONSOLE_HELPER_VERSION, method(:console_cheatsheet))
 ## (removed invalid placeholder)
 
 # Convenience global methods for helpers registry
