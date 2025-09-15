@@ -22,25 +22,23 @@ def cheatsheet
 end
 # == LOADED HELPERS REGISTRY ==
 # Tracks loaded helpers, their versions, and cheatsheet procs
-unless defined?(ConsoleHelpers)
-  module ConsoleHelpers
-    @@loaded_helpers = {}
+module ConsoleHelpers
+  @@loaded_helpers = {}
 
-    def self.register_helper(helper_name, version, cheatsheet_proc)
-      @@loaded_helpers[helper_name] = {
-        version: version,
-        cheatsheet: cheatsheet_proc
-      }
-    end
+  def self.register_helper(helper_name, version, cheatsheet_proc)
+    @@loaded_helpers[helper_name] = {
+      version: version,
+      cheatsheet: cheatsheet_proc
+    }
+  end
 
-    def self.helpers
-      @@loaded_helpers.map { |name, info| "#{name} (v#{info[:version]})" }
-    end
-    def self.cheatsheets
-      @@loaded_helpers.map do |name, info|
-        "--- #{name} (v#{info[:version]}) ---\n" + info[:cheatsheet].call.to_s
-      end.join("\n\n")
-    end
+  def self.helpers
+    @@loaded_helpers.map { |name, info| "#{name} (v#{info[:version]})" }
+  end
+  def self.cheatsheets
+    @@loaded_helpers.map do |name, info|
+      "--- #{name} (v#{info[:version]}) ---\n" + info[:cheatsheet].call.to_s
+    end.join("\n\n")
   end
 end
 ## (removed invalid placeholder)
