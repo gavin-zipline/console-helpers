@@ -1,4 +1,4 @@
-CONSOLE_HELPER_VERSION = "0.3.29"
+CONSOLE_HELPER_VERSION = "0.3.30"
 def console_cheatsheet
   puts "\n🧪 Console Helper Cheatsheet"
   puts "• list_recent_history(count = 25) or lrh(count = 25)"
@@ -16,9 +16,6 @@ def console_cheatsheet
   puts "• variablize_urls_from_clipboard → Extract URLs from clipboard and variablize"
 end
 
-def cheatsheet
-  console_cheatsheet
-end
 def cheatsheet
   console_cheatsheet
 end
@@ -552,12 +549,5 @@ class Hash
   end
 end
 
-# Conditionally invoke the appropriate cheatsheet, if available
-if respond_to?(:console_cheatsheet)
-  console_cheatsheet
-elsif respond_to?(:cheatsheet)
-  cheatsheet
-else
-  puts "ℹ️  No cheatsheet method found in console_helper.rb"
-end
+console_cheatsheet
 enable_return_printing
