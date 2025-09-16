@@ -1,8 +1,39 @@
 WORKFLOW_HELPER_VERSION = "0.1.0"
+WORKFLOW_HELPER_VERSION = "0.1.1"
+HELPER_VERSION = WORKFLOW_HELPER_VERSION
 def workflow_helper_cheatsheet
+  puts   "\n🚀🚀🚀 WORKFLOW HELPER — VERSION #{WORKFLOW_HELPER_VERSION} 🚀🚀🚀"
   puts "\n📘 Workflow Helper Cheatsheet:"
-  puts "• Add your workflow helper methods here."
+  puts "\n🛠 General:"
+  puts "• wf                                      → Show the Workflow Helper guide"
+  puts "• wfc                                     → Print this cheatsheet"
+  puts "• workflow_helper_version                 → Show current version"
+  puts "\n🔍 Lookup Methods:"
+  puts "• workflow_by_domain(domain)              → Find a workflow by sender domain"
+  puts "• list_workflow_rules(workflow)           → List rules for a workflow"
+  puts "• workflow_email_for(team_or_id)          → Get workflow email for a team or ID"
+  puts "• workflow_to_email_addresses             → List all open teams with their workflow email"
+  puts "\n📨 SNS Lookup:"
+  puts "• sns_last                                → Most recent SNS message"
+  puts "• get_sns_messages(since: 1.week.ago)     → SNS messages for current org (in public tenant)"
+  puts "• sns_by_email(email)                     → SNS messages by sender"
+  puts "• sns_by_to(email_address)                → SNS messages with recipient"
+  puts "• public_sns_by_to(email_address)         → Same as above, without tenant switching"
+  puts "• sns_by_message_id(message_id)           → SNS messages by ID match"
+  puts "• sns_by_domain(domain)                   → SNS messages with recipient domain"
+  puts "• sns_by_subject(subject)                 → SNS messages by subject"
+  puts "• sns_for_email(email)                    → SNS message that triggered given email"
+  puts "\n✉️ Email Lookup:"
+  puts "• emails_by_subject(subject)              → Emails by subject"
+  puts "• emails_by_message_id(message_id)        → Emails by exact message ID"
+  puts "• emails_by_email(email)                  → Emails by from address"
+  puts "• email_for_sns(sns_msg)                  → Email triggered by SNS message"
+  puts "\n⚙️ Configuration:"
+  puts "• check_feature_flags                     → List required workflow feature flags"
+  puts "• list_internal_workflow_emails           → Teams with internal workflow email addresses"
 end
+alias wfc workflow_helper_cheatsheet
+ConsoleHelpers.register_helper("workflow", WORKFLOW_HELPER_VERSION, method(:workflow_helper_cheatsheet))
 ConsoleHelpers.register_helper("workflow", WORKFLOW_HELPER_VERSION, method(:workflow_helper_cheatsheet))
 WORKFLOW_HELPER_VERSION = "0.1.1"
 HELPER_VERSION = WORKFLOW_HELPER_VERSION

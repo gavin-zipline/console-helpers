@@ -118,7 +118,7 @@ def get_helper(name)
   loaded = false
   candidates.each do |file|
     timestamp = (Time.now.to_f * 1000).to_i
-    url = "https://raw.githubusercontent.com/gavin-zipline/console-helpers/main/#{file}?nocache=#{timestamp}"
+  url = "https://raw.githubusercontent.com/gavin-zipline/console-helpers/main/#{file}?nocache=#{timestamp}"
     puts "📡 Trying #{file}..."
     begin
       code = URI.open(url).read
@@ -130,7 +130,7 @@ def get_helper(name)
       next
     rescue NameError => e
       puts "💥 NameError while loading #{file}: #{e.message}"
-      break
+      raise
     rescue StandardError => e
       puts "💥 Error loading #{file}: #{e.class} - #{e.message}"
       break
