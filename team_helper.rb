@@ -1,6 +1,17 @@
-disable_return_printing
 TEAM_HELPER_VERSION = "0.1.7"
-# == Team Helper for Console ==
+def team_helper_cheatsheet
+  puts   "\n🚀🚀🚀 TEAM HELPER — VERSION #{TEAM_HELPER_VERSION} 🚀🚀🚀"
+  puts "\n📘 Team Helper Cheatsheet:"
+  puts "\n🛠 Methods:"
+  puts "• find_team(param)       → Smart find a Team by ID, name, or reference number"
+  puts "• teams_from_ids(ids)    → Load Teams from array of IDs; report missing"
+  puts "• teams_from_reference_numbers(refs) → Load Teams from array of reference_numbers; report missing"
+  puts "\n🛠 Team Instance Methods:"
+  puts "• team.summary           → Key attributes including store and team type"
+  puts "• team.members           → List of Users on the Team"
+  puts "• team.tasks             → List of Tasks assigned to the Team"
+  puts "• team.feature_flags     → List enabled Feature Flags for the Team"
+end
 ConsoleHelpers.register_helper("team", TEAM_HELPER_VERSION, method(:team_helper_cheatsheet))
 
 module TeamHelper
@@ -103,19 +114,8 @@ module TeamHelper
 end
 
 
-def team_helper_cheatsheet
-  puts   "\n🚀🚀🚀 TEAM HELPER — VERSION #{TEAM_HELPER_VERSION} 🚀🚀🚀"
-  puts "\n📘 Team Helper Cheatsheet:"
-  puts "\n🛠 Methods:"
-  puts "• find_team(param)       → Smart find a Team by ID, name, or reference number"
-  puts "• teams_from_ids(ids)    → Load Teams from array of IDs; report missing"
-  puts "• teams_from_reference_numbers(refs) → Load Teams from array of reference_numbers; report missing"
-  puts "\n🛠 Team Instance Methods:"
-  puts "• team.summary           → Key attributes including store and team type"
-  puts "• team.members           → List of Users on the Team"
-  puts "• team.tasks             → List of Tasks assigned to the Team"
-  puts "• team.feature_flags     → List enabled Feature Flags for the Team"
-end
+
+
 
 enable_return_printing
 team_helper_cheatsheet

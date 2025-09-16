@@ -1,4 +1,23 @@
 USER_HELPER_VERSION = "1.4.1"
+
+def user_helper_cheatsheet
+  puts   "\n🚀🚀🚀 USER HELPER — VERSION #{USER_HELPER_VERSION} 🚀🚀🚀"
+  puts "\n📘 User Helper Cheatsheet:"
+  puts "\n🛠 Methods:"
+  puts "• find_user(param)                    → Smart finder by ID, email, username, or attribute hash"
+  puts "• user.summary                        → Key attributes + most recent audit summary"
+  puts "• user.user_set                       → Returns [user, user_context] for convenience"
+  puts "• user.org_role                       → Get org role from user title"
+  puts "• user.audits_without_preferences     → Audits excluding 'preferences' noise"
+  puts "• align_users_to_org_roles(users)     → Align org role permissions for a set of users"
+  puts "• user.enable_feature_flag(flag)       → Enable a Flipper feature flag for the user"
+  puts "• user.disable_feature_flag(flag)      → Disable a Flipper feature flag for the user"
+  puts "• user.teams_history                  → Chronological history of user's team memberships"
+  puts "• user.previous_team                  → Returns the user's previous team if they recently switched"
+  puts "• user.merge_all_bookmarks            → Merge all user's bookmarks to most recently joined team"
+  puts "• reset_service_account                  → Resets the service account to its default clean state"
+end
+
 ConsoleHelpers.register_helper("user", USER_HELPER_VERSION, method(:user_helper_cheatsheet))
 
 # == User Console Helper ==
@@ -222,24 +241,6 @@ def align_users_to_org_roles(users)
     user.align_permissions!(org_role.permissions)
     puts "✅ Permissions updated"
   end
-end
-
-def user_helper_cheatsheet
-  puts   "\n🚀🚀🚀 USER HELPER — VERSION #{USER_HELPER_VERSION} 🚀🚀🚀"
-  puts "\n📘 User Helper Cheatsheet:"
-  puts "\n🛠 Methods:"
-  puts "• find_user(param)                    → Smart finder by ID, email, username, or attribute hash"
-  puts "• user.summary                        → Key attributes + most recent audit summary"
-  puts "• user.user_set                       → Returns [user, user_context] for convenience"
-  puts "• user.org_role                       → Get org role from user title"
-  puts "• user.audits_without_preferences     → Audits excluding 'preferences' noise"
-  puts "• align_users_to_org_roles(users)     → Align org role permissions for a set of users"
-  puts "• user.enable_feature_flag(flag)       → Enable a Flipper feature flag for the user"
-  puts "• user.disable_feature_flag(flag)      → Disable a Flipper feature flag for the user"
-  puts "• user.teams_history                  → Chronological history of user's team memberships"
-  puts "• user.previous_team                  → Returns the user's previous team if they recently switched"
-  puts "• user.merge_all_bookmarks            → Merge all user's bookmarks to most recently joined team"
-  puts "• reset_service_account                  → Resets the service account to its default clean state"
 end
 
 user_helper_cheatsheet

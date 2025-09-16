@@ -6,16 +6,23 @@
 # Usage: Load via `gh("[helper_name]")` then use `[helper_name]_cheatsheet` for docs
 # Safety: [Describe safety features - read-only, confirmation required, etc.]
 
+
+# == [HELPER_NAME] Helper Version and Registration ==
 [HELPER_NAME]_HELPER_VERSION = "1.0.0"
 
 # --------------------------------- shortcuts -------------------------------- #
 # Optional: Add convenient shortcuts for common operations
 # Example: def find_x(param); end
 
-def [helper_name]_helper_version
-  puts "🔧 [Helper Name] Helper Version: #{[HELPER_NAME]_HELPER_VERSION}"
-  [HELPER_NAME]_HELPER_VERSION
+
+# Registration and cheatsheet method must be at the top for convention compliance
+def [helper_name]_cheatsheet
+  puts "\n�🚀🚀 [HELPER_NAME] HELPER — VERSION #{[HELPER_NAME]_HELPER_VERSION} 🚀🚀🚀"
+  puts "\n📘 [Helper Name] Helper Cheatsheet:"
+  # ...
 end
+
+ConsoleHelpers.register_helper("[helper_name]", [HELPER_NAME]_HELPER_VERSION, method(:[helper_name]_cheatsheet))
 
 # ------------------------------------------------------------------------------
 # Core Helper Methods - organized by functional category
@@ -182,6 +189,7 @@ def [helper_name]_cheatsheet
   puts "• [helper_name]_helper_version  → Show helper version"
   puts "• [helper_name]_cheatsheet      → Show this help"
 end
+
 
 # Auto-display cheatsheet when helper loads
 [helper_name]_cheatsheet

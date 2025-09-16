@@ -1,6 +1,4 @@
-WORKFLOW_HELPER_VERSION = "0.1.0"
 WORKFLOW_HELPER_VERSION = "0.1.1"
-HELPER_VERSION = WORKFLOW_HELPER_VERSION
 def workflow_helper_cheatsheet
   puts   "\n🚀🚀🚀 WORKFLOW HELPER — VERSION #{WORKFLOW_HELPER_VERSION} 🚀🚀🚀"
   puts "\n📘 Workflow Helper Cheatsheet:"
@@ -31,15 +29,6 @@ def workflow_helper_cheatsheet
   puts "\n⚙️ Configuration:"
   puts "• check_feature_flags                     → List required workflow feature flags"
   puts "• list_internal_workflow_emails           → Teams with internal workflow email addresses"
-end
-alias wfc workflow_helper_cheatsheet
-ConsoleHelpers.register_helper("workflow", WORKFLOW_HELPER_VERSION, method(:workflow_helper_cheatsheet))
-ConsoleHelpers.register_helper("workflow", WORKFLOW_HELPER_VERSION, method(:workflow_helper_cheatsheet))
-WORKFLOW_HELPER_VERSION = "0.1.1"
-HELPER_VERSION = WORKFLOW_HELPER_VERSION
-def show_workflow_helper_guide
-  # Prints the main workflow helper guide with available methods.
-  # Example: wf
   puts <<~GUIDE
 
     # ---------------------------------------------------------------------------- #
@@ -78,13 +67,8 @@ def show_workflow_helper_guide
     Call `wf` at any time to view this guide.
 
     GUIDE
-  end
-
-  alias wf show_workflow_helper_guide
-
-  def workflow_helper_version
-    puts "Workflow Helper version #{WORKFLOW_HELPER_VERSION}"
-  end
+end
+ConsoleHelpers.register_helper("workflow", WORKFLOW_HELPER_VERSION, method(:workflow_helper_cheatsheet))
 
   # ---------------------------------------------------------------------------- #
   #                              Class Enhancements                              #
@@ -301,5 +285,4 @@ def workflow_helper_cheatsheet
   puts "• check_feature_flags                     → List required workflow feature flags"
   puts "• list_internal_workflow_emails           → Teams with internal workflow email addresses"
 end
-alias wfc workflow_helper_cheatsheet
 workflow_helper_cheatsheet

@@ -1,4 +1,3 @@
-PIPELINE_HELPER_VERSION = "0.1.0"
 PIPELINE_HELPER_VERSION = "0.2.1"
 def pipeline_helper_cheatsheet
   puts   "\n🚀🚀� PIPELINE HELPER — VERSION #{PIPELINE_HELPER_VERSION} 🚀🚀🚀"
@@ -37,12 +36,6 @@ def pipeline_helper_cheatsheet
   puts "• Currently only SmartQuery sources are supported"
 end
 ConsoleHelpers.register_helper("pipeline", PIPELINE_HELPER_VERSION, method(:pipeline_helper_cheatsheet))
-ConsoleHelpers.register_helper("pipeline", PIPELINE_HELPER_VERSION, method(:pipeline_helper_cheatsheet))
-# ------------------------------------------------------------------------------
-# Pipeline Helper
-# ------------------------------------------------------------------------------
-
-PIPELINE_HELPER_VERSION = "0.2.1"
 
 # --------------------------------- shortcuts -------------------------------- #
 def dp
