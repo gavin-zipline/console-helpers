@@ -1,4 +1,4 @@
-CONSOLE_HELPER_VERSION = "0.3.30"
+CONSOLE_HELPER_VERSION = "0.3.31"
 def console_cheatsheet
   puts "\n🧪 Console Helper Cheatsheet"
   puts "• list_recent_history(count = 25) or lrh(count = 25)"
@@ -10,6 +10,9 @@ def console_cheatsheet
   puts "• ass_counts"
   puts "  → Returns a hash where each key is an association name, and the value is either the count (if zero) or an array: [count, copy-paste snippet] for nonzero counts."
   puts "    Example: {:subscribers=>[301, 'distribution_list_subscribers = distribution_list.subscribers'], :subscriptions=>0, ...}"
+  puts ""
+  puts "• nested_classes or nc"
+  puts "  → Lists subclasses nested under a module or class."
   puts ""
   puts "• variablize_url(url) → Generate ID + find line for one URL"
   puts "• variablize_urls([url1, url2, ...]) → Same for multiple"
@@ -93,8 +96,26 @@ module ModelInfo
   end
 end
 
+
 class Object
   include ModelInfo
+end
+
+# Method to fetch subclasses of a module or class
+Module.class_eval do
+  def nested_classes
+    ObjectSpace.each_object(Class).select do |klass|
+      begin
+        klass.name && klass.name.start_with?("#{self.name}::") &&
+          klass.name.count(':') == self.name.count(':') + 2
+      rescue StandardError => e
+        puts "Error processing class #{klass}: #{e}"
+        false
+      end
+    end
+  end
+
+  alias :nc :nested_classes
 end
 
 
