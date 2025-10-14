@@ -1,4 +1,4 @@
-WORKFLOW_HELPER_VERSION = "0.1.1"
+WORKFLOW_HELPER_VERSION = "0.1.3"
 def workflow_helper_cheatsheet
   puts   "\n🚀🚀🚀 WORKFLOW HELPER — VERSION #{WORKFLOW_HELPER_VERSION} 🚀🚀🚀"
   puts "\n📘 Workflow Helper Cheatsheet:"
@@ -82,12 +82,12 @@ ConsoleHelpers.register_helper("workflow", WORKFLOW_HELPER_VERSION, method(:work
   end
   class EmailProcessor::SNSMessage < ApplicationRecord
     def info
+      # Safely parse JSON and use dig for all deep access
       message = JSON.parse(params["Message"]) rescue {}
-      message_id = message.dig("mail", "messageId")
+      message_id = message.dig("mail", "messageId") || params["MessageId"]
       sns_message_type = params["Type"]
       ses_notification_type = message["notificationType"]
       subject = message.dig("mail", "commonHeaders", "subject") || "(no subject)"
-      message_id = params["MessageId"]
       error = self.error.presence || "(no error)"
 
       puts "--- Notification Info ---"
@@ -99,6 +99,11 @@ ConsoleHelpers.register_helper("workflow", WORKFLOW_HELPER_VERSION, method(:work
       puts "Message ID: #{message_id}"
       puts "Error: #{error}"
       puts "-------------------------"
+    end
+
+    def source
+      # Safely dig for source address
+      JSON.parse(params["Message"]).dig("mail", "source") rescue nil
     end
   end
 
@@ -122,13 +127,14 @@ ConsoleHelpers.register_helper("workflow", WORKFLOW_HELPER_VERSION, method(:work
 
 
 def sns_by_email(email)
-  # Finds SNS messages from a specific sender email (in 'source').
+  # Uses public tenant. Finds SNS messages from a specific sender email (in 'source').
   # Example: sns_by_email("gti.etl.integration@gtigrows.com")
   Apartment::Tenant.switch('public') do
-    EmailProcessor::SNSMessage.where("params -> 'Message' -> 'mail' ->> 'source' = ?", email)
+    EmailProcessor::SNSMessage.where("params ->> 'Message' ILIKE ?", "%\"source\":\"#{email}\"%")
   end
 end
 def sns_by_to(email_address)
+  # Uses public tenant. Finds SNS messages with recipient.
   Apartment::Tenant.switch('public') do
     EmailProcessor::SNSMessage
       .where("created_at > ?", 5.days.ago)
@@ -136,13 +142,14 @@ def sns_by_to(email_address)
   end
 end
 def public_sns_by_to(email_address)
+  # Uses current tenant. Finds SNS messages with recipient.
   EmailProcessor::SNSMessage
-  .where("created_at > ?", 5.days.ago)
-  .where("params -> 'Message' ILIKE ?", "%#{email_address}%")
+    .where("created_at > ?", 5.days.ago)
+    .where("params -> 'Message' ILIKE ?", "%#{email_address}%")
 end
 
 def sns_last
-  # Finds the most recent SNS message.
+  # Uses public tenant. Finds the most recent SNS message.
   # Example: sns_last
   Apartment::Tenant.switch('public') do
     EmailProcessor::SNSMessage.order(created_at: :desc).first
@@ -150,7 +157,7 @@ def sns_last
 end
 
 def sns_by_message_id(message_id)
-  # Finds SNS messages containing a given message ID string.
+  # Uses public tenant. Finds SNS messages containing a given message ID string.
   # Example: sns_by_message_id("07ef19cc-817d-5618-9788-79ac1d28d038")
   Apartment::Tenant.switch('public') do
     EmailProcessor::SNSMessage.where("params ->> 'Message' ILIKE ?", "%#{message_id}%")
@@ -158,7 +165,7 @@ def sns_by_message_id(message_id)
 end
 
 def sns_by_domain(domain)
-  # Finds SNS messages where any recipient email includes the given domain.
+  # Uses public tenant. Finds SNS messages where any recipient email includes the given domain.
   # Example: sns_by_domain("gtigrows.com")
   Apartment::Tenant.switch('public') do
     EmailProcessor::SNSMessage.where("params ->> 'Message' ILIKE ?", "%@#{domain}%")
@@ -166,7 +173,7 @@ def sns_by_domain(domain)
 end
 
 def sns_by_subject(subject)
-  # Finds SNS messages with a subject that includes the given string.
+  # Uses public tenant. Finds SNS messages with a subject that includes the given string.
   # Example: sns_by_subject("Daily Recap")
   Apartment::Tenant.switch('public') do
     EmailProcessor::SNSMessage.where("params -> 'Message' -> 'mail' -> 'commonHeaders' ->> 'subject' ILIKE ?", "%#{subject}%")
@@ -196,6 +203,7 @@ end
 # Fetch recent SNS messages from the public tenant for the current org
 # Default timeframe is 1.week.ago; pass :all to get all time
 def get_sns_messages(since: 1.week.ago)
+  # Uses public tenant. Fetch recent SNS messages for the current org
   original_shortname = Organization.current.shortname
 
   messages = Apartment::Tenant.switch('public') do
@@ -241,6 +249,7 @@ def check_feature_flags
 end
 
 def sns_for_email(email)
+  # Uses public tenant. Finds SNS message that triggered given email.
   Apartment::Tenant.switch('public') do
     EmailProcessor::SNSMessage
       .where("params ->> 'Message' ILIKE ?", "%#{email.message_id.gsub(/[<>]/, '')}%")
@@ -249,9 +258,123 @@ def sns_for_email(email)
 end
 
 def email_for_sns(sns_msg)
-  # Finds EmailProcessor::Email created for the given SNS message, if any.
-  message_id = JSON.parse(sns_msg.params["Message"])["mail"]["messageId"]
+  # Finds EmailProcessor::Email created for the given SNS message, if any. Uses dig for safety.
+  message = JSON.parse(sns_msg.params["Message"]) rescue {}
+  message_id = message.dig("mail", "messageId")
   EmailProcessor::Email.find_by(message_id: message_id)
+end
+
+# ################################################################################
+# Investigation & Trace Helpers
+# ################################################################################
+
+def investigate_workflow_communication(subject: nil, team_id: nil, email: nil)
+  puts "\n=== Workflow Communication Investigation ==="
+  if team_id
+    team = Team.by(id: team_id)
+    if team
+      puts "Team: #{team.name} (ID: #{team.id})"
+      w_email = team.workflow_email
+      puts "Workflow Email: #{w_email}"
+    else
+      puts "No team found for ID: #{team_id}"
+      return
+    end
+  end
+
+  if subject
+    puts "\nLooking up workflows by subject: '#{subject}'"
+    emails = emails_by_subject(subject)
+    if emails.any?
+      puts "Found #{emails.count} email(s) with subject. Message IDs: #{emails.map(&:message_id).join(", ")}"
+    else
+      puts "No emails found with subject: '#{subject}'"
+    end
+    sns_msgs = sns_by_subject(subject)
+    if sns_msgs.any?
+      puts "Found #{sns_msgs.count} SNS message(s) with subject. IDs: #{sns_msgs.map(&:id).join(", ")}"
+    else
+      puts "No SNS messages found with subject: '#{subject}'"
+    end
+  end
+
+  if email
+    puts "\nLooking up by email: #{email}"
+    emails = emails_by_email(email)
+    if emails.any?
+      puts "Found #{emails.count} email(s) from #{email}. Message IDs: #{emails.map(&:message_id).join(", ")}"
+    else
+      puts "No emails found from: #{email}"
+    end
+    sns_msgs = sns_by_email(email)
+    if sns_msgs.any?
+      puts "Found #{sns_msgs.count} SNS message(s) from #{email}. IDs: #{sns_msgs.map(&:id).join(", ")}"
+    else
+      puts "No SNS messages found from: #{email}"
+    end
+  end
+
+  if team_id && !subject && !email
+    # Show recent workflow emails and SNS for the team
+    puts "\nRecent workflow emails for team:"
+    recent_workflow_emails(team_id).each do |em|
+      puts "  Email: #{em.subject} (#{em.created_at}) [msgid: #{em.message_id}]"
+    end
+    puts "\nRecent SNS messages for team:"
+    recent_sns_messages(team_id).each do |sns|
+      puts "  SNS: #{sns.id} (#{sns.created_at})"
+    end
+  end
+  puts "\n=== End Investigation ==="
+end
+
+def recent_workflow_emails(team_or_id, limit = 10)
+  team = team_or_id.is_a?(Team) ? team_or_id : Team.by(id: team_or_id)
+  return [] unless team
+  EmailProcessor::Email.where("to ILIKE ?", "%tid.#{team.id}-workflows-%").order(created_at: :desc).limit(limit)
+end
+
+def recent_sns_messages(team_or_id, limit = 10)
+  team = team_or_id.is_a?(Team) ? team_or_id : Team.by(id: team_or_id)
+  return [] unless team
+  Apartment::Tenant.switch('public') do
+    EmailProcessor::SNSMessage.where("params ->> 'Message' ILIKE ?", "%tid.#{team.id}-workflows-%").order(created_at: :desc).limit(limit)
+  end
+end
+
+# --- Improved absence/error reporting for lookup methods ---
+def emails_by_subject(subject)
+  emails = EmailProcessor::Email.where("subject ILIKE ?", "%#{subject}%")
+  puts "No emails found with subject: '#{subject}'" if emails.empty?
+  emails
+end
+
+def emails_by_message_id(message_id)
+  emails = EmailProcessor::Email.where(message_id: message_id)
+  puts "No emails found with message ID: #{message_id}" if emails.empty?
+  emails
+end
+
+def emails_by_email(email)
+  emails = EmailProcessor::Email.where("from ILIKE ?", "%#{email}%")
+  puts "No emails found from: #{email}" if emails.empty?
+  emails
+end
+
+def sns_by_email(email)
+  sns_msgs = Apartment::Tenant.switch('public') do
+    EmailProcessor::SNSMessage.where("params ->> 'Message' ILIKE ?", "%\"source\":\"#{email}\"%")
+  end
+  puts "No SNS messages found from: #{email}" if sns_msgs.empty?
+  sns_msgs
+end
+
+def sns_by_subject(subject)
+  sns_msgs = Apartment::Tenant.switch('public') do
+    EmailProcessor::SNSMessage.where("params -> 'Message' -> 'mail' -> 'commonHeaders' ->> 'subject' ILIKE ?", "%#{subject}%")
+  end
+  puts "No SNS messages found with subject: '#{subject}'" if sns_msgs.empty?
+  sns_msgs
 end
 
 def workflow_helper_cheatsheet
