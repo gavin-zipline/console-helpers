@@ -2,30 +2,22 @@
 # ------------------------------------------------------------------------------
 # Simple Alignment Helper
 # ------------------------------------------------------------------------------
-# Purpose: Utilities for checking, getting, setting, and pretty-printing OrganizationSetting values
-# Usage: Load via `gh("simple_alignment")` then use `simple_alignment_helper_cheatsheet` for docs
-# Safety: Read/write, but all destructive operations require explicit confirmation
 
-SIMPLE_ALIGNMENT_HELPER_VERSION = "1.0.1"
+# Purpose: Utilities for getting, setting, and pretty-printing OrganizationSetting values
+# Usage: Load via `gh("simple_alignment")` then use `simple_alignment_helper_cheatsheet` for docs
+
+SIMPLE_ALIGNMENT_HELPER_VERSION = "1.0.2"
 
 # == Cheatsheet ==
 def simple_alignment_helper_cheatsheet
   puts "\n🚀🚀🚀 SIMPLE ALIGNMENT HELPER — VERSION #{SIMPLE_ALIGNMENT_HELPER_VERSION} 🚀🚀🚀"
   puts "\n📘 Simple Alignment Helper Cheatsheet:"
-  puts "\n🔍 Query & Check:"
-  puts "• sa_setting_present?(org, key)         → Check if OrganizationSetting exists for key"
-  puts "• sa_get_setting(org, key)              → Get OrganizationSetting value (parsed if JSON)"
-  puts "\n🛠️ Utilities:"
-  puts "• sa_set_setting(org, key, value)       → Set OrganizationSetting value (writes as JSON if Hash)"
-  puts "• sa_pretty_json(value)                 → Pretty-print JSON value for console readability"
+  puts "\n🔍 Query & Set:"
+  puts "• get_sa_setting                        → Get 'alignment_settings' value (parsed if JSON, warns if not present)"
+  puts "• set_sa_setting(value)                 → Set 'alignment_settings' value (writes as JSON if Hash)"
   puts "\n💡 Usage Examples:"
-  puts "• sa_setting_present?(Organization.first, 'my_key')"
-  puts "• sa_get_setting(Organization.first, 'my_key')"
-  puts "• sa_set_setting(Organization.first, 'my_key', {foo: 'bar'})"
-  puts "• puts sa_pretty_json('{\"foo\":\"bar\"}')"
-  puts "\n⚠️ Safety Notes:"
-  puts "• All read operations are safe by default"
-  puts "• Setting values will persist changes to the database"
+  puts "• get_sa_setting"
+  puts "• set_sa_setting({foo: 'bar'})"
   puts "\n📋 Quick Reference:"
   puts "• simple_alignment_helper_cheatsheet    → Show this help"
 end
@@ -35,15 +27,14 @@ ConsoleHelpers.register_helper("simple_alignment", SIMPLE_ALIGNMENT_HELPER_VERSI
 # == Core Methods ==
 
 
-# Checks if the 'alignment_settings' OrganizationSetting is present for the current tenant
-def sa_setting_present?
-  OrganizationSetting.find_by(key: "alignment_settings").present?
-end
 
-# Gets the value for the 'alignment_settings' OrganizationSetting, parsed as JSON if possible
-def sa_get_setting
+# Gets the value for the 'alignment_settings' OrganizationSetting, parsed as JSON if possible. Warns if not present.
+def get_sa_setting
   setting = OrganizationSetting.find_by(key: "alignment_settings")
-  return nil unless setting
+  unless setting
+    puts "⚠️  No 'alignment_settings' OrganizationSetting found for this tenant."
+    return nil
+  end
   begin
     JSON.parse(setting.value)
   rescue JSON::ParserError
@@ -52,21 +43,13 @@ def sa_get_setting
 end
 
 # Sets the value for the 'alignment_settings' OrganizationSetting (as JSON if value is a Hash)
-def sa_set_setting(value)
+def set_sa_setting(value)
   setting = OrganizationSetting.find_or_initialize_by(key: "alignment_settings")
   setting.value = value.is_a?(Hash) ? value.to_json : value
   setting.save!
   setting
 end
 
-def sa_pretty_json(value)
-  begin
-    json = value.is_a?(String) ? JSON.parse(value) : value
-    JSON.pretty_generate(json)
-  rescue JSON::ParserError, TypeError
-    value.to_s
-  end
-end
 
 # Auto-display cheatsheet when helper loads
 simple_alignment_helper_cheatsheet
