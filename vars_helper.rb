@@ -12,7 +12,7 @@ def vars_helper_cheatsheet
   puts "• erp / drp                   → Enable/disable return printing"
 end
 ConsoleHelpers.register_helper("vars", VARS_HELPER_VERSION, method(:vars_helper_cheatsheet))
-disable_return_printing
+disable_return_printing if defined?(disable_return_printing)
 VARS_HELPER_VERSION = "0.1.0"
 ConsoleHelpers.register_helper("vars", VARS_HELPER_VERSION, method(:vars_helper_cheatsheet))
 # Vars Helper for Zipline
@@ -36,7 +36,7 @@ end
 
 vars_helper_version
 vars_helper_cheatsheet
-enable_return_printing
+enable_return_printing if defined?(enable_return_printing)
 
 def init_variables
   user = User.employed.last
@@ -102,9 +102,9 @@ def sc
 end
 
 def erp
-  enable_return_printing
+  enable_return_printing if defined?(enable_return_printing)
 end
 
 def drp
-  disable_return_printing
+  disable_return_printing if defined?(disable_return_printing)
 end

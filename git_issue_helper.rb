@@ -1,7 +1,7 @@
-disable_return_printing
+disable_return_printing if defined?(disable_return_printing)
 GIT_ISSUE_HELPER_VERSION = "1.3.9"
 ConsoleHelpers.register_helper("git_issue", GIT_ISSUE_HELPER_VERSION, method(:git_issue_helper_cheatsheet))
-enable_return_printing
+enable_return_printing if defined?(enable_return_printing)
 git_issue_cheatsheet
 
 require 'json'
@@ -278,7 +278,7 @@ end
 # Logic: Scores each issue based on priority label, age, reporter match, and user priority.
 # Prints top 3 ranked issues to console. Returns the top-ranked issue object.
 def next_issue(state: "open", statuses: ["triage", "selected_for_work", "in_progress"], preferred_reporters: [], avoid_labels: [], created: nil, weights: {}, boost_labels: {})
-  disable_return_printing
+  disable_return_printing if defined?(disable_return_printing)
   issues = GitIssue.all
 
   issues = issues.select do |issue|
@@ -329,7 +329,7 @@ def next_issue(state: "open", statuses: ["triage", "selected_for_work", "in_prog
     puts "   Reporter: #{issue.reporter}"
     puts "   Score: #{score.round(2)}"
   end
-  enable_return_printing
+  enable_return_printing if defined?(enable_return_printing)
   top_three.first&.first
 end
 
@@ -479,7 +479,7 @@ end
 
 
 def triage_my_on_holds
-  disable_return_printing
+  disable_return_printing if defined?(disable_return_printing)
   my_login = 'gavin-zipline'
   on_hold_issues = get_git_issues(state: "open", assignee: my_login, label: "On Hold", grouping: :reporter)
 
@@ -512,7 +512,7 @@ def triage_my_on_holds
     puts "##{i.number}: #{i.title} — #{i.url}"
   end
 
-  enable_return_printing
+  enable_return_printing if defined?(enable_return_printing)
   triage_needed
 end
 

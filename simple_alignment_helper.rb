@@ -6,7 +6,7 @@
 # Usage: Load via `gh("simple_alignment")` then use `simple_alignment_helper_cheatsheet` for docs
 # Safety: Read/write, but all destructive operations require explicit confirmation
 
-SIMPLE_ALIGNMENT_HELPER_VERSION = "1.0.0"
+SIMPLE_ALIGNMENT_HELPER_VERSION = "1.0.1"
 
 # == Cheatsheet ==
 def simple_alignment_helper_cheatsheet
@@ -33,13 +33,16 @@ end
 ConsoleHelpers.register_helper("simple_alignment", SIMPLE_ALIGNMENT_HELPER_VERSION, method(:simple_alignment_helper_cheatsheet))
 
 # == Core Methods ==
-def sa_setting_present?(organization, key)
-  setting = organization.organization_settings.find_by(key: key)
-  !setting.nil?
+
+
+# Checks if the 'alignment_settings' OrganizationSetting is present for the current tenant
+def sa_setting_present?
+  OrganizationSetting.find_by(key: "alignment_settings").present?
 end
 
-def sa_get_setting(organization, key)
-  setting = organization.organization_settings.find_by(key: key)
+# Gets the value for the 'alignment_settings' OrganizationSetting, parsed as JSON if possible
+def sa_get_setting
+  setting = OrganizationSetting.find_by(key: "alignment_settings")
   return nil unless setting
   begin
     JSON.parse(setting.value)
@@ -48,8 +51,9 @@ def sa_get_setting(organization, key)
   end
 end
 
-def sa_set_setting(organization, key, value)
-  setting = organization.organization_settings.find_or_initialize_by(key: key)
+# Sets the value for the 'alignment_settings' OrganizationSetting (as JSON if value is a Hash)
+def sa_set_setting(value)
+  setting = OrganizationSetting.find_or_initialize_by(key: "alignment_settings")
   setting.value = value.is_a?(Hash) ? value.to_json : value
   setting.save!
   setting

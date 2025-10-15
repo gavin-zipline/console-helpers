@@ -1,4 +1,4 @@
-CONSOLE_HELPER_VERSION = "0.3.31"
+CONSOLE_HELPER_VERSION = "0.3.32"
 def console_cheatsheet
   puts "\n🧪 Console Helper Cheatsheet"
   puts "• list_recent_history(count = 25) or lrh(count = 25)"
@@ -22,6 +22,10 @@ end
 def cheatsheet
   console_cheatsheet
 end
+
+def enable_return_printing; end
+def disable_return_printing; end
+
 # == LOADED HELPERS REGISTRY ==
 # Tracks loaded helpers, their versions, and cheatsheet procs
 module ConsoleHelpers
@@ -58,7 +62,7 @@ end
 # == MODEL TOOLS ==
 # These helpers were migrated from console_model_tools.rb to ensure model utilities
 # like nested_classes and model summaries are always available when console_helper is loaded.
-disable_return_printing
+disable_return_printing if defined?(disable_return_printing)
 puts "\n🚀🚀🚀 Loading console_helper.rb — version #{CONSOLE_HELPER_VERSION} 🚀🚀🚀\n"
 
 module ModelInfo
@@ -555,5 +559,5 @@ class Hash
   end
 end
 
-enable_return_printing
+enable_return_printing if defined?(enable_return_printing)
 cheatsheet

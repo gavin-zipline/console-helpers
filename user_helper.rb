@@ -1,4 +1,4 @@
-USER_HELPER_VERSION = "1.4.1"
+USER_HELPER_VERSION = "1.4.2"
 
 def user_helper_cheatsheet
   puts   "\n🚀🚀🚀 USER HELPER — VERSION #{USER_HELPER_VERSION} 🚀🚀🚀"
@@ -160,7 +160,7 @@ class User
   end
 
   def merge_all_bookmarks
-    disable_return_printing
+  disable_return_printing if defined?(disable_return_printing)
 
     return unless team_memberships.exists?
 
@@ -168,7 +168,7 @@ class User
 
     unless most_recent_team_id
       puts "⚠️  No recent team found for user #{id}."
-      enable_return_printing
+  enable_return_printing if defined?(enable_return_printing)
       return
     end
 
@@ -200,7 +200,7 @@ class User
       puts "ℹ️ No bookmarks found for user #{id}."
     end
 
-    enable_return_printing
+  enable_return_printing if defined?(enable_return_printing)
   end
 
   private
@@ -246,7 +246,7 @@ end
 user_helper_cheatsheet
 
 def users_by_name(names)
-  disable_return_printing
+  disable_return_printing if defined?(disable_return_printing)
 
   found_users = []
   missing_names = []
@@ -307,7 +307,7 @@ def users_by_name(names)
   puts "• Found #{found_users.size} users."
   puts "• #{missing_names.size} names did not match any user."
 
-  enable_return_printing
+  enable_return_printing if defined?(enable_return_printing)
   user_helper_cheatsheet
   found_users
 end

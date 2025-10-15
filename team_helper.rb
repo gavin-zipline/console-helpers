@@ -27,7 +27,7 @@ module TeamHelper
   end
 
   def teams_from_ids(ids)
-    disable_return_printing
+  disable_return_printing if defined?(disable_return_printing)
     ids = ids.map(&:to_i)
     teams = Team.where(id: ids).to_a
     found_ids = teams.map(&:id)
@@ -38,12 +38,12 @@ module TeamHelper
       puts "⚠️ Found #{teams.size} of #{ids.size} teams."
       puts "⚠️ Missing IDs: #{missing_ids.join(', ')}"
     end
-    enable_return_printing
+  enable_return_printing if defined?(enable_return_printing)
     teams
   end
 
   def teams_from_reference_numbers(ref_nums)
-    disable_return_printing
+  disable_return_printing if defined?(disable_return_printing)
     ref_nums = ref_nums.map(&:to_s)
     padded_ref_nums = ref_nums.map { |r| r.rjust(4, '0') }
     search_ref_nums = (ref_nums + padded_ref_nums).uniq
@@ -75,7 +75,7 @@ module TeamHelper
       puts "⚡ Note: The following reference numbers were found after padding: #{padded_matches.join(', ')}"
     end
 
-    enable_return_printing
+  enable_return_printing if defined?(enable_return_printing)
     teams
   end
 
@@ -117,6 +117,6 @@ end
 
 
 
-enable_return_printing
+enable_return_printing if defined?(enable_return_printing)
 team_helper_cheatsheet
 include TeamHelper
