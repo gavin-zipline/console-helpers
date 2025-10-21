@@ -7,6 +7,7 @@
 SIMPLE_ALIGNMENT_HELPER_VERSION = "1.1.0"
 
 def simple_alignment_helper_cheatsheet
+  puts "\n=== Simple Alignment Helper Cheatsheet (v#{SIMPLE_ALIGNMENT_HELPER_VERSION}) ===\n"
   puts "• get_file_mapping                      → Get the 'file_mapping' section from alignment_settings (or nil)"
   puts "• set_file_mapping(value)               → Set the 'file_mapping' section in alignment_settings"
   puts "• get_row_mappings                      → Get the 'row_mappings' array from alignment_settings (or nil)"
