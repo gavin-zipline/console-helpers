@@ -46,15 +46,20 @@ def alignment_cheatsheet
   puts "• latest_team_alignment.summary      → Status counts and % changes/errors"
   puts "• latest_team_alignment.errors       → Hash of error_class => [rows]"
   puts "• latest_team_alignment.errors_summary → Summary string of error counts"
+  puts "• error_tally(alignment=latest_user)  → Count errors by type"
+  puts "• non_team_errors(alignment=latest_user) → Errors excluding team not found"
+  puts "• team_key_errors(alignment=latest_user) → Just team integration_key errors"
   puts "\n🛠️ UTILITY METHODS:"
   puts "• yank_alignment_data(org)           → Show rake command to pull prod alignment data locally"
   puts "\n🔧 ADMINISTRATIVE METHODS:"
   puts "• run_latest_team_file(org)          → ⚠️  Run .process_latest (processes alignment)"
   puts "\n💡 Usage Examples:"
-  puts "  ta('Pacsun').count"
-  puts "  latest_team_alignment.summary"
-  puts "  show_raw_data('Nike')"
-  puts "  pending_terminations.count"
+  puts "  ta('Pacsun').count                  # Get TeamFile class count"
+  puts "  latest_user_alignment.summary       # Show alignment summary"
+  puts "  error_tally                         # Count all errors by type"
+  puts "  non_team_errors.count               # Count non-team errors"
+  puts "  team_key_errors.count               # Count team integration key errors"
+  puts "  show_raw_data('Nike')               # View raw CSV data"
 end
 
 ConsoleHelpers.register_helper("alignment", ALIGNMENT_HELPER_VERSION, method(:alignment_cheatsheet))
@@ -97,6 +102,38 @@ def show_raw_data(org)
   CSV.read(raw_file.download, headers: true, col_sep: "\t")
 rescue => e
   puts "❌ Error reading raw data for #{org}: #{e.message}"
+  nil
+end
+
+def error_tally(alignment = nil)
+  alignment ||= latest_user_alignment
+  return nil unless alignment
+
+  alignment.alignments.where.not(error: nil).pluck(:error).tally
+rescue => e
+  puts "❌ Error getting error tally: #{e.message}"
+  nil
+end
+
+def non_team_errors(alignment = nil)
+  alignment ||= latest_user_alignment
+  return nil unless alignment
+
+  team_error = "Couldn't find Team with [WHERE \"teams\".\"deleted_at\" IS NULL AND \"teams\".\"integration_key\" = $1]"
+  alignment.alignments.where.not(error: team_error).where.not(error: nil)
+rescue => e
+  puts "❌ Error getting non-team errors: #{e.message}"
+  nil
+end
+
+def team_key_errors(alignment = nil)
+  alignment ||= latest_user_alignment
+  return nil unless alignment
+
+  team_error = "Couldn't find Team with [WHERE \"teams\".\"deleted_at\" IS NULL AND \"teams\".\"integration_key\" = $1]"
+  alignment.alignments.where(error: team_error)
+rescue => e
+  puts "❌ Error getting team key errors: #{e.message}"
   nil
 end
 
