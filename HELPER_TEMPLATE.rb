@@ -3,7 +3,8 @@
 # ------------------------------------------------------------------------------
 # Purpose: [Brief description of what this helper does]
 # NOTE: The first line after comments must be the version constant, e.g. [HELPER_NAME]_HELPER_VERSION = "1.0.0"
-# Usage: Load via `gh("[helper_name]")` then use `[helper_name]_cheatsheet` for docs
+# Usage: Load via `gh("[helper_name]")` or `gh("[helper_names]")` then use `[helper_name]_cheatsheet` for docs
+# Flexible access: `[helper_name]_cheatsheet`, `[helper_name]_helper_cheatsheet`, `[helper_names]_cheatsheet`, etc.
 # Safety: [Describe safety features - read-only, confirmation required, etc.]
 
 
@@ -21,6 +22,11 @@ def [helper_name]_cheatsheet
   puts "\n📘 [Helper Name] Helper Cheatsheet:"
   # ...
 end
+
+# Flexible cheatsheet naming - support multiple conventions for convenience
+alias [helper_name]_helper_cheatsheet [helper_name]_cheatsheet
+alias [helper_names]_cheatsheet [helper_name]_cheatsheet
+alias [helper_names]_helper_cheatsheet [helper_name]_cheatsheet
 
 ConsoleHelpers.register_helper("[helper_name]", [HELPER_NAME]_HELPER_VERSION, method(:[helper_name]_cheatsheet))
 
@@ -200,6 +206,7 @@ end
 # 1. Replace all [PLACEHOLDER] values with actual names:
 #    - [HELPER_NAME] → TEAM (all caps for constants)
 #    - [helper_name] → team (lowercase for methods)
+#    - [helper_names] → teams (lowercase plural for flexible access)
 #    - [Helper Name] → Team (title case for display)
 #    - [model] → team (lowercase singular)
 #    - [models] → teams (lowercase plural)
@@ -224,6 +231,7 @@ end
 #
 # 5. Deploy:
 #    - Upload to GitHub repo (raw file access)
-#    - Test loading via gh("helper_name")
+#    - Test loading via gh("helper_name") and gh("helper_names")
+#    - Test flexible cheatsheet access: helper_name_cheatsheet, helper_names_cheatsheet
 #    - Verify cheatsheet discovery works
 # ------------------------------------------------------------------------------

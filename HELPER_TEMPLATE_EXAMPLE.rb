@@ -3,7 +3,8 @@
 # ------------------------------------------------------------------------------
 # Purpose: Demonstrates the standard helper structure and patterns
 # NOTE: The first line after comments must be the version constant, e.g. EXAMPLE_HELPER_VERSION = "1.0.0"
-# Usage: Load via `gh("team")` then use `team_cheatsheet` for docs
+# Usage: Load via `gh("team")` or `gh("teams")` then use `team_cheatsheet` for docs
+# Flexible access: `team_cheatsheet`, `team_helper_cheatsheet`, `teams_cheatsheet`, etc.
 # Safety: Read-only by default, destructive operations require confirmation
 
 EXAMPLE_HELPER_VERSION = "1.0.0"
@@ -174,6 +175,11 @@ def example_helper_cheatsheet
   puts "• eh_version                     → Show helper version"
   puts "• example_helper_cheatsheet      → Show this help"
 end
+
+# Flexible cheatsheet naming - support multiple conventions for convenience
+alias example_cheatsheet example_helper_cheatsheet
+alias examples_cheatsheet example_helper_cheatsheet
+alias examples_helper_cheatsheet example_helper_cheatsheet
 
 # Auto-display cheatsheet when helper loads
 example_helper_cheatsheet

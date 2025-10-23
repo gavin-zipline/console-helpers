@@ -19,6 +19,12 @@ Rails console helper functions for Zipline application debugging and investigati
 ```ruby
 # In Rails console (hrc)
 gh("helper_name")  # Loads helper from GitHub repo
+
+# Flexible naming support:
+gh("feature_flags")  # Load feature flags helper
+gh("feature_flag")   # Also works (singular)
+gh("alignment")      # Load alignment helper
+gh("alignments")     # Also works (plural)
 ```
 
 ## Helper Standards & Registration System
@@ -42,6 +48,27 @@ gh("helper_name")  # Loads helper from GitHub repo
 - Each helper defines a `*_cheatsheet` method that outputs usage info
 - The cheatsheet is registered as a proc and callable via the registry
 - The global `cheatsheets` method displays all cheatsheets for discoverability
+
+**Flexible Cheatsheet Naming:**
+
+- Helpers should support multiple cheatsheet naming conventions for user convenience:
+  - `alignment_cheatsheet` (base form)
+  - `alignment_helper_cheatsheet` (with \_helper suffix)
+  - `alignments_cheatsheet` (plural form)
+  - `alignments_helper_cheatsheet` (plural with \_helper suffix)
+
+Example implementation:
+
+```ruby
+def alignment_cheatsheet
+  # Main cheatsheet implementation
+end
+
+# Alias methods for flexible naming
+alias alignment_helper_cheatsheet alignment_cheatsheet
+alias alignments_cheatsheet alignment_cheatsheet
+alias alignments_helper_cheatsheet alignment_cheatsheet
+```
 
 ### Dynamic Loading
 
