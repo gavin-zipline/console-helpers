@@ -1,4 +1,4 @@
-CONSOLE_HELPER_VERSION = "0.3.32"
+CONSOLE_HELPER_VERSION = "0.3.33"
 def console_cheatsheet
   puts "\n🧪 Console Helper Cheatsheet"
   puts "• list_recent_history(count = 25) or lrh(count = 25)"
@@ -17,6 +17,9 @@ def console_cheatsheet
   puts "• variablize_url(url) → Generate ID + find line for one URL"
   puts "• variablize_urls([url1, url2, ...]) → Same for multiple"
   puts "• variablize_urls_from_clipboard → Extract URLs from clipboard and variablize"
+  puts ""
+  puts "• service_account_impersonator(user) → Copy user's permissions, team_memberships, and security_role to service account for testing"
+  puts "• service_account_impersonator(:reset) → Restore service account's original state"
 end
 
 def cheatsheet
@@ -194,6 +197,104 @@ end
 def link_to(name, _path)
   # Just return the name in plain text for console output
   name
+end
+
+# Service Account Impersonation Methods
+# Useful for debugging production issues where you can't login as a specific user
+def service_account_impersonator(user_or_reset)
+  service_user = User.service_user
+
+  # Handle reset case
+  if user_or_reset == :reset || user_or_reset == 'reset'
+    return puts "❌ No impersonation state found" unless @impersonation_state
+
+    state = @impersonation_state
+    original_permissions = state[:original_permissions]
+    original_team_memberships = state[:original_team_memberships]
+    original_security_role = state[:original_security_role]
+    target_user = state[:target_user]
+
+    puts "=== Restoring Service Account ==="
+    puts "Restoring #{service_user.name} from #{target_user.name} impersonation"
+
+    # Restore original state
+    service_user.permissions.clear
+    original_permissions.each { |permission| service_user.permissions << permission }
+
+    service_user.team_memberships.destroy_all
+    original_team_memberships.each do |tm|
+      service_user.team_memberships.create!(team: tm.team, role: tm.role)
+    end
+
+    service_user.update!(security_role: original_security_role)
+
+    puts "✅ Service account restored to original state"
+    puts "  - Permissions: #{service_user.permissions.count}"
+    puts "  - Team memberships: #{service_user.team_memberships.count}"
+    puts "  - Security role: #{service_user.security_role&.name || 'none'}"
+    @impersonation_state = nil
+
+    # Set global variables to service account
+    user = User.service_user
+    user_context = User.service_user.team_memberships.first&.to_user_context
+    puts "  - Set global user and user_context variables"
+
+    return service_user
+  end
+
+  # Handle impersonation case
+  target_user = user_or_reset
+  original_permissions = service_user.permissions.to_a
+  original_team_memberships = service_user.team_memberships.to_a
+  original_security_role = service_user.security_role
+
+  puts "=== Service Account Impersonation ==="
+  puts "Target user: #{target_user.name} (ID: #{target_user.id})"
+  puts "Service user: #{service_user.name} (ID: #{service_user.id})"
+  puts "Original service permissions: #{service_user.permissions.count}"
+  puts "Original service team memberships: #{service_user.team_memberships.count}"
+  puts "Original service security role: #{original_security_role&.name || 'none'}"
+  puts ""
+  puts "Target user permissions: #{target_user.permissions.count}"
+  puts "Target user team memberships: #{target_user.team_memberships.count}"
+  puts "Target user security role: #{target_user.security_role&.name || 'none'}"
+
+  # Store original state for restoration
+  @impersonation_state = {
+    service_user: service_user,
+    original_permissions: original_permissions,
+    original_team_memberships: original_team_memberships,
+    original_security_role: original_security_role,
+    target_user: target_user
+  }
+
+  # Clear and copy permissions
+  service_user.permissions.clear
+  target_user.permissions.each { |permission| service_user.permissions << permission }
+
+  # Clear and copy team memberships
+  service_user.team_memberships.destroy_all
+  target_user.team_memberships.each do |tm|
+    service_user.team_memberships.create!(team: tm.team, role: tm.role)
+  end
+
+  # Copy security role
+  service_user.update!(security_role: target_user.security_role)
+
+  puts ""
+  puts "✅ Service account now impersonating #{target_user.name}"
+  puts "  - Permissions: #{service_user.permissions.count}"
+  puts "  - Team memberships: #{service_user.team_memberships.count}"
+  puts "  - Security role: #{service_user.security_role&.name || 'none'}"
+  puts ""
+  puts "Use service_account_impersonator(:reset) when done"
+
+  # Set global variables to service account
+  user = User.service_user
+  user_context = User.service_user.team_memberships.first&.to_user_context
+  puts "  - Set global user and user_context variables"
+
+  service_user
 end
 
 # Method to humanize rules for a given object

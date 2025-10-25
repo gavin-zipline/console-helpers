@@ -15,7 +15,6 @@ def user_helper_cheatsheet
   puts "• user.teams_history                  → Chronological history of user's team memberships"
   puts "• user.previous_team                  → Returns the user's previous team if they recently switched"
   puts "• user.merge_all_bookmarks            → Merge all user's bookmarks to most recently joined team"
-  puts "• reset_service_account                  → Resets the service account to its default clean state"
 end
 
 ConsoleHelpers.register_helper("user", USER_HELPER_VERSION, method(:user_helper_cheatsheet))
@@ -53,23 +52,6 @@ def impersonate_user(target_user)
   end
 
   puts "✅ Service account is now impersonating #{target_user.name} (#{target_user.id})"
-  service_user
-end
-
-def reset_service_account
-  User::ServiceUser.reset!
-  service_user = User::ServiceUser.user
-
-  # Reset feature flags
-  Flipper.features.each { |flag| Flipper.disable(flag.key, service_user) }
-
-  # Reset security role
-  service_user.update!(security_role: SecurityRole.default)
-
-  # Reset preferences
-  service_user.update!(time_zone: 'UTC', locale: 'en')
-
-  puts "✅ Service Account has been reset to default state."
   service_user
 end
 
