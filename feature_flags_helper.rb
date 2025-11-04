@@ -1,6 +1,6 @@
 
 # == FEATURE FLAGS Helper Version and Registration ==
-FEATURE_FLAGS_HELPER_VERSION = "0.4.1"
+FEATURE_FLAGS_HELPER_VERSION = "0.4.3"
 
 # Registration and cheatsheet method must be at the top for convention compliance
 
@@ -87,10 +87,11 @@ def teams_with_flag_enabled(feature_flag)
   Team.where(id: team_ids)
 end
 
+
 def feature_flags_helper_cheatsheet
   puts   "\n🚀🚀🚀 FEATURE FLAGS HELPER — VERSION #{FEATURE_FLAGS_HELPER_VERSION} 🚀🚀🚀"
   puts "\n📘 Feature Flags Helper Cheatsheet:"
-  puts "\n� INVESTIGATION & DEBUGGING:"
+  puts "\n🔍 INVESTIGATION & DEBUGGING:"
   puts "• debug_user_feature(feature_flag, user)     → Why does/doesn't this user have this feature?"
   puts "• tenant_feature_overview(feature_flag)      → All gates for feature in current tenant"
   puts "• find_negation_gates(feature_flag)          → Show all negation gates for feature"
@@ -107,6 +108,7 @@ def feature_flags_helper_cheatsheet
   puts "• all_flags_enabled_for_user(user)           → List of flags enabled for the given user"
   puts "• all_flags_enabled_for_org                  → List of flags enabled for current org"
   puts "\n⚙️  MANAGEMENT & CONTROL:"
+  puts "• enable_feature_for_org(feature_flag)            → Enable feature for current organization"
   puts "• enable_feature_for_user(feature_flag, user)     → Create enablement gate for user"
   puts "• disable_feature_for_user(feature_flag, user)    → Create negation gate for user"
   puts "• enable_feature_for_team(feature_flag, team)     → Create enablement gate for team"
@@ -120,10 +122,10 @@ def feature_flags_helper_cheatsheet
   puts "• Features.build(user: user).enabled?() respects negations, Flipper[].enabled?() does not"
 end
 
-# Flexible cheatsheet naming - support multiple conventions for convenience
+
+# Single cheatsheet alias for convenience
 alias feature_flags_cheatsheet feature_flags_helper_cheatsheet
-alias feature_flag_cheatsheet feature_flags_helper_cheatsheet
-alias feature_flag_helper_cheatsheet feature_flags_helper_cheatsheet
+
 
 # ================================
 # INVESTIGATION & DEBUGGING METHODS
@@ -181,10 +183,10 @@ def tenant_feature_overview(feature_flag)
 
   # Enablement gates
   enablement_gates = Flipper::Adapters::ActiveRecord::Gate
-    .where(feature_key: feature_flag)
-    .where("value LIKE ? OR value LIKE ?",
-           "%zipline-#{tenant}/%",
-           "%Organization/#{Organization.current.id}%")
+  .where(feature_key: feature_flag)
+  .where("value LIKE ? OR value LIKE ?",
+  "%zipline-#{tenant}/%",
+  "%Organization/#{Organization.current.id}%")
 
   puts "✅ ENABLEMENT GATES (#{enablement_gates.count}):"
   if enablement_gates.any?
@@ -201,10 +203,10 @@ def tenant_feature_overview(feature_flag)
 
   # Negation gates
   negation_gates = Flipper::Adapters::ActiveRecord::Gate
-    .where(feature_key: "#{feature_flag}.negated")
-    .where("value LIKE ? OR value LIKE ?",
-           "%zipline-#{tenant}/%",
-           "%Organization/#{Organization.current.id}%")
+  .where(feature_key: "#{feature_flag}.negated")
+  .where("value LIKE ? OR value LIKE ?",
+  "%zipline-#{tenant}/%",
+  "%Organization/#{Organization.current.id}%")
 
   puts "🚫 NEGATION GATES (#{negation_gates.count}):"
   if negation_gates.any?
@@ -302,6 +304,7 @@ def feature_inheritance_chain(user)
   puts "   9. Global feature state (default)"
 end
 
+
 # ================================
 # MANAGEMENT & CONTROL METHODS
 # ================================
@@ -359,18 +362,25 @@ def disable_feature_for_team(feature_flag, team)
   puts "🚫 Created negation gate for '#{feature_flag}' for team: #{team.name}"
 end
 
-def remove_user_gates(feature_flag, user)
-  tenant = Organization.current.shortname
-  gate_value = "gid://zipline-#{tenant}/User/#{user.id}"
+# Enables a feature flag for the current organization
+def enable_feature_for_org(feature_flag)
+  Flipper[feature_flag].enable(Organization.current)
+  puts "✅ Enabled '#{feature_flag}' for organization: #{Organization.current.name}"
+end
 
-  # Remove enablement gate
+# Unified gate removal for user/team
+def remove_actor_gates(feature_flag, actor)
+  actor_type = actor.is_a?(User) ? "User" : "Team"
+  name = actor.is_a?(User) ? actor.name : "team: #{actor.name}"
+  tenant = Organization.current.shortname
+  gate_value = "gid://zipline-#{tenant}/#{actor_type}/#{actor.id}"
+
   enablement_gate = Flipper::Adapters::ActiveRecord::Gate.where(
     feature_key: feature_flag,
     key: 'actors',
     value: gate_value
   ).first
 
-  # Remove negation gate
   negation_gate = Flipper::Adapters::ActiveRecord::Gate.where(
     feature_key: "#{feature_flag}.negated",
     key: 'actors',
@@ -382,53 +392,20 @@ def remove_user_gates(feature_flag, user)
     enablement_gate.destroy
     removed << "enablement"
   end
-
   if negation_gate
     negation_gate.destroy
     removed << "negation"
   end
-
   if removed.any?
-    puts "🗑️  Removed #{removed.join(' and ')} gate(s) for #{user.name}"
+    puts "🗑️  Removed #{removed.join(' and ')} gate(s) for #{name}"
   else
-    puts "ℹ️  No gates found for #{user.name}"
+    puts "ℹ️  No gates found for #{name}"
   end
 end
 
-def remove_team_gates(feature_flag, team)
-  tenant = Organization.current.shortname
-  gate_value = "gid://zipline-#{tenant}/Team/#{team.id}"
+# Backwards compatibility aliases
+alias remove_user_gates remove_actor_gates
+alias remove_team_gates remove_actor_gates
 
-  # Remove enablement gate
-  enablement_gate = Flipper::Adapters::ActiveRecord::Gate.where(
-    feature_key: feature_flag,
-    key: 'actors',
-    value: gate_value
-  ).first
-
-  # Remove negation gate
-  negation_gate = Flipper::Adapters::ActiveRecord::Gate.where(
-    feature_key: "#{feature_flag}.negated",
-    key: 'actors',
-    value: gate_value
-  ).first
-
-  removed = []
-  if enablement_gate
-    enablement_gate.destroy
-    removed << "enablement"
-  end
-
-  if negation_gate
-    negation_gate.destroy
-    removed << "negation"
-  end
-
-  if removed.any?
-    puts "🗑️  Removed #{removed.join(' and ')} gate(s) for team: #{team.name}"
-  else
-    puts "ℹ️  No gates found for team: #{team.name}"
-  end
-end
 
 feature_flags_helper_cheatsheet
