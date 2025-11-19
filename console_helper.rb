@@ -1,4 +1,4 @@
-CONSOLE_HELPER_VERSION = "0.3.33"
+CONSOLE_HELPER_VERSION = "0.3.34"
 def console_cheatsheet
   puts "\n🧪 Console Helper Cheatsheet"
   puts "• list_recent_history(count = 25) or lrh(count = 25)"
