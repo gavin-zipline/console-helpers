@@ -28,8 +28,7 @@ end
 # Alias for cheatsheet (should be near cheatsheet)
 alias :ch :console_cheatsheet
 
-# Register this helper (should be after cheatsheet/alias)
-ConsoleHelpers.register(:console, self)
+
 
 # General Helpers (grouped together)
 def reload!
@@ -105,6 +104,7 @@ module ConsoleHelpers
   end
 end
 ConsoleHelpers.register_helper("console", CONSOLE_HELPER_VERSION, method(:console_cheatsheet))
+ConsoleHelpers.register(:console, self)
 ## (removed invalid placeholder)
 
 # Convenience global methods for helpers registry
