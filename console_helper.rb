@@ -1,50 +1,3 @@
-# Console Helper for Zipline
-# This file provides a set of utility methods and helpers for use in the Rails console.
-# To load: require 'eval(URI.open('https://raw.githubusercontent.com/gavin-zipline/console-helpers/main/console_helper.rb').read)
-# To see available helpers: puts console_cheatsheet
-
-# Version constant (should be first)
-CONSOLE_HELPER_VERSION = '1.0.1'
-
-# Cheatsheet (should be second)
-def console_cheatsheet
-  <<~CHEAT
-    Console Helper (v#{CONSOLE_HELPER_VERSION})
-    ------------------------------------------
-    # General
-    puts console_cheatsheet      # Show this cheatsheet
-    reload!                     # Reload Rails console
-    ...
-  CHEAT
-end
-
-# Alias for cheatsheet (should be near cheatsheet)
-alias :ch :console_cheatsheet
-
-
-
-# General Helpers (grouped together)
-def reload!
-  puts 'Reloading Rails console...'
-  Rails.application.reloader.reload!
-end
-
-def whoami
-  ENV['USER'] || ENV['USERNAME']
-end
-
-# Model/Class Extensions (grouped together)
-class User
-  def self.find_by_email(email)
-    find_by(email: email)
-  end
-end
-
-# Monkey-patching (grouped together)
-class String
-  def red; "\e[31m#{self}\e[0m"; end
-  def green; "\e[32m#{self}\e[0m"; end
-end
 CONSOLE_HELPER_VERSION = "0.3.33"
 def console_cheatsheet
   puts "\n🧪 Console Helper Cheatsheet"
@@ -69,7 +22,6 @@ def console_cheatsheet
   puts "• service_account_impersonator(:reset) → Restore service account's original state"
 end
 
-
 def cheatsheet
   console_cheatsheet
 end
@@ -77,6 +29,8 @@ end
 def enable_return_printing; end
 def disable_return_printing; end
 
+# == LOADED HELPERS REGISTRY ==
+# Tracks loaded helpers, their versions, and cheatsheet procs
 module ConsoleHelpers
   @@loaded_helpers = {}
 
@@ -97,7 +51,6 @@ module ConsoleHelpers
   end
 end
 ConsoleHelpers.register_helper("console", CONSOLE_HELPER_VERSION, method(:console_cheatsheet))
-ConsoleHelpers.register(:console, self)
 ## (removed invalid placeholder)
 
 # Convenience global methods for helpers registry
@@ -253,22 +206,7 @@ def service_account_impersonator(user_or_reset)
 
   # Handle reset case
   if user_or_reset == :reset || user_or_reset == 'reset'
-    unless @impersonation_state
-      if !service_user.admin?
-        # Try to restore the admin permission if missing
-        admin_perm = Permission.find_by(name: 'admin') || service_user.permissions.build(name: 'admin')
-        unless service_user.permissions.exists?(name: 'admin')
-          service_user.permissions << admin_perm
-          service_user.save!
-          puts "⚠️  No impersonation state found, but admin permission was missing. Restored admin permission to service account."
-        else
-          puts "❌ No impersonation state found, but service account already has admin permission."
-        end
-      else
-        puts "❌ No impersonation state found, and service account is already admin."
-      end
-      return service_user
-    end
+    return puts "❌ No impersonation state found" unless @impersonation_state
 
     state = @impersonation_state
     original_permissions = state[:original_permissions]
