@@ -1,17 +1,10 @@
-# frozen_string_literal: true
-
 # Console Helper for Zipline
-#
 # This file provides a set of utility methods and helpers for use in the Rails console.
-#
-# To load: require './console-helpers/console_helper.rb'
-#
+# To load: require 'eval(URI.open('https://raw.githubusercontent.com/gavin-zipline/console-helpers/main/console_helper.rb').read)
 # To see available helpers: puts console_cheatsheet
-#
-# To register: ConsoleHelpers.register(:console, self)
 
 # Version constant (should be first)
-CONSOLE_HELPER_VERSION = '1.0.0'
+CONSOLE_HELPER_VERSION = '1.0.1'
 
 # Cheatsheet (should be second)
 def console_cheatsheet
