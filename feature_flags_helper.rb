@@ -1,8 +1,63 @@
+FEATURE_FLAGS_HELPER_VERSION = "0.4.4"
 
-# == FEATURE FLAGS Helper Version and Registration ==
-FEATURE_FLAGS_HELPER_VERSION = "0.4.3"
+def feature_flags_helper_cheatsheet
+  puts   "\n🚀🚀🚀 FEATURE FLAGS HELPER — VERSION #{FEATURE_FLAGS_HELPER_VERSION} 🚀🚀🚀"
+  puts "\n📘 Feature Flags Helper Cheatsheet:"
+  puts "\n🔍 INVESTIGATION & DEBUGGING:"
+  puts "• debug_user_feature(feature_flag, user)     → Why does/doesn't this user have this feature?"
+  puts "• tenant_feature_overview(feature_flag)      → All gates for feature in current tenant"
+  puts "• find_negation_gates(feature_flag)          → Show all negation gates for feature"
+  puts "• compare_user_vs_team_access(feature_flag, user) → Compare user access vs their team access"
+  puts "• feature_inheritance_chain(user)            → Show user → teams → org → security_role hierarchy"
+  puts "\n🛠 BASIC QUERIES:"
+  puts "• feature_flags_report([keyword])            → List all feature flags, optionally filtered by keyword"
+  puts "• feature_flag_actors(feature_flag)          → Lists org/team/user/role actors per feature flag"
+  puts "• org_flag_enabled?(feature_flag)            → Returns true if the feature is org-enabled"
+  puts "• teams_with_flag_enabled(feature_flag)      → Returns Team records with the flag enabled"
+  puts "• flag_enabled_for_org?(feature_flag)        → Returns true if flag is enabled for current org"
+  puts "• flag_enabled_for_team?(feature_flag, team) → Returns true if flag is enabled for given team"
+  puts "• flag_enabled_for_user?(feature_flag, user) → Returns true if flag is enabled for given user"
+  puts "• all_flags_enabled_for_team(team)           → List of flags enabled for the given team"
+  puts "• all_flags_enabled_for_user(user)           → List of flags enabled for the given user"
+  puts "• all_flags_enabled_for_org                  → List of flags enabled for current org"
+  puts "\n⚙️  MANAGEMENT & CONTROL:"
+  puts "• enable_feature_for_org(feature_flag)            → Enable feature for current organization"
+  puts "• enable_feature_for_user(feature_flag, user)     → Create enablement gate for user"
+  puts "• disable_feature_for_user(feature_flag, user)    → Create negation gate for user"
+  puts "• enable_feature_for_team(feature_flag, team)     → Create enablement gate for team"
+  puts "• disable_feature_for_team(feature_flag, team)    → Create negation gate for team"
+  puts "• remove_user_gates(feature_flag, user)           → Remove all gates for user (enablement & negation)"
+  puts "• remove_team_gates(feature_flag, team)           → Remove all gates for team (enablement & negation)"
+  puts "\n🔧 Usage Tips:"
+  puts "• List all feature flags:           Flipper.features.map(&:name).sort"
+  puts "• Enable/disable feature globally:  Flipper[:my_feature].enable / .disable"
+  puts "• Remember: Negation gates (feature.negated) override enablement gates"
+  puts "• Features.build(user: user).enabled?() respects negations, Flipper[].enabled?() does not"
+end
 
-# Registration and cheatsheet method must be at the top for convention compliance
+alias feature_flags_cheatsheet feature_flags_helper_cheatsheet
+
+## ================================
+# FEATURE FLAGS REPORTING
+# ================================
+
+# Lists all feature flags, optionally filtered by a keyword (case-insensitive substring match).
+# Returns an alphabetical list of flag names.
+def feature_flags_report(keyword = nil)
+  flags = Flipper.features.map(&:name)
+  if keyword && !keyword.strip.empty?
+    pattern = Regexp.new(Regexp.escape(keyword), Regexp::IGNORECASE)
+    flags = flags.select { |name| name =~ pattern }
+  end
+  flags = flags.sort
+  if flags.empty?
+    puts "\n🔍 No feature flags found#{keyword ? " matching '#{keyword}'" : ''}."
+  else
+    puts "\n🚩 Feature Flags#{keyword ? " matching '#{keyword}'" : ''}:"
+    flags.each { |name| puts "  • #{name}" }
+  end
+  flags
+end
 
 def feature_flag_actors(feature_flag)
   actors = Flipper[feature_flag].actors_value
@@ -88,6 +143,7 @@ def teams_with_flag_enabled(feature_flag)
 end
 
 
+
 def feature_flags_helper_cheatsheet
   puts   "\n🚀🚀🚀 FEATURE FLAGS HELPER — VERSION #{FEATURE_FLAGS_HELPER_VERSION} 🚀🚀🚀"
   puts "\n📘 Feature Flags Helper Cheatsheet:"
@@ -98,6 +154,7 @@ def feature_flags_helper_cheatsheet
   puts "• compare_user_vs_team_access(feature_flag, user) → Compare user access vs their team access"
   puts "• feature_inheritance_chain(user)            → Show user → teams → org → security_role hierarchy"
   puts "\n🛠 BASIC QUERIES:"
+  puts "• feature_flags_report([keyword])            → List all feature flags, optionally filtered by keyword"
   puts "• feature_flag_actors(feature_flag)          → Lists org/team/user/role actors per feature flag"
   puts "• org_flag_enabled?(feature_flag)            → Returns true if the feature is org-enabled"
   puts "• teams_with_flag_enabled(feature_flag)      → Returns Team records with the flag enabled"
