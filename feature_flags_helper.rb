@@ -120,7 +120,7 @@ def feature_flags_helper_cheatsheet
   puts "• compare_user_vs_team_access(feature_flag, user) → Compare user access vs their team access"
   puts "• feature_inheritance_chain(user)            → Show user → teams → org → security_role hierarchy"
   puts "\n🛠 BASIC QUERIES:"
-  puts "• feature_flags_report([keyword])            → List all feature flags, optionally filtered by keyword"
+  puts "• feature_flags_report(keyword)            → List all feature flags, optionally filtered by keyword"
   puts "• feature_flag_actors(feature_flag)          → Lists org/team/user/role actors per feature flag"
   puts "• org_flag_enabled?(feature_flag)            → Returns true if the feature is org-enabled"
   puts "• teams_with_flag_enabled(feature_flag)      → Returns Team records with the flag enabled"
@@ -370,6 +370,12 @@ end
 def enable_feature_for_team(feature_flag, team)
   Flipper[feature_flag].enable(team)
   puts "✅ Enabled '#{feature_flag}' for team: #{team.name}"
+end
+
+def enable_feature_for_team_and_descendants(feature_flag, team)
+  team.self_and_descendants.find_each do |target_team|
+    enable_feature_for_team(feature_flag, target_team)
+  end
 end
 
 def disable_feature_for_team(feature_flag, team)

@@ -101,6 +101,12 @@ module ModelInfo
       end
     end.to_h
   end
+
+  # Returns a hash of association names to their associated objects
+  def association_objects
+    association_info.keys.index_with { |k| self.send(k) }
+  end
+  alias_method :ass_objects, :association_objects
 end
 
 
