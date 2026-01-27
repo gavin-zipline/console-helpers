@@ -1,8 +1,7 @@
 
 LEARNING_HELPER_VERSION = '1.0.0'
 def learning_helper_cheatsheet
-  puts "\n📘 Learning Helper Cheatsheet:"
-  puts "• Add your learning helper methods here."
+  learning_cheatsheet
 end
 ConsoleHelpers.register_helper("learning", LEARNING_HELPER_VERSION, method(:learning_helper_cheatsheet))
 # frozen_string_literal: true
@@ -103,5 +102,3 @@ module LearningHelper
   end
 end
 
-include LearningHelper
-learning_cheatsheet

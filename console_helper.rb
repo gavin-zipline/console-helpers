@@ -205,6 +205,23 @@ def link_to(name, _path)
   name
 end
 
+# Method to find tenant by record ID and class
+def find_tenant(id, klass)
+  original_tenant = Apartment::Tenant.current
+
+  Apartment.tenant_names.each do |tenant|
+    Apartment::Tenant.switch!(tenant)
+    record = klass.find_by(id: id)
+    if record
+      Apartment::Tenant.switch!(original_tenant)
+      return tenant
+    end
+  end
+
+  Apartment::Tenant.switch!(original_tenant)
+  nil
+end
+
 # Service Account Impersonation Methods
 # Useful for debugging production issues where you can't login as a specific user
 def service_account_impersonator(user_or_reset)
@@ -218,10 +235,10 @@ def service_account_impersonator(user_or_reset)
     original_permissions = state[:original_permissions]
     original_team_memberships = state[:original_team_memberships]
     original_security_role = state[:original_security_role]
-    target_user = state[:target_user]
+    user_to_impersonate = state[:user_to_impersonate]
 
     puts "=== Restoring Service Account ==="
-    puts "Restoring #{service_user.name} from #{target_user.name} impersonation"
+    puts "Restoring #{service_user.name} from impersonation as #{user_to_impersonate.name}"
 
     # Restore original state
     service_user.permissions.clear
@@ -249,21 +266,21 @@ def service_account_impersonator(user_or_reset)
   end
 
   # Handle impersonation case
-  target_user = user_or_reset
+  user_to_impersonate = user_or_reset
   original_permissions = service_user.permissions.to_a
   original_team_memberships = service_user.team_memberships.to_a
   original_security_role = service_user.security_role
 
   puts "=== Service Account Impersonation ==="
-  puts "Target user: #{target_user.name} (ID: #{target_user.id})"
+  puts "Impersonating as: #{user_to_impersonate.name} (ID: #{user_to_impersonate.id})"
   puts "Service user: #{service_user.name} (ID: #{service_user.id})"
   puts "Original service permissions: #{service_user.permissions.count}"
   puts "Original service team memberships: #{service_user.team_memberships.count}"
   puts "Original service security role: #{original_security_role&.name || 'none'}"
   puts ""
-  puts "Target user permissions: #{target_user.permissions.count}"
-  puts "Target user team memberships: #{target_user.team_memberships.count}"
-  puts "Target user security role: #{target_user.security_role&.name || 'none'}"
+  puts "User to impersonate permissions: #{user_to_impersonate.permissions.count}"
+  puts "User to impersonate team memberships: #{user_to_impersonate.team_memberships.count}"
+  puts "User to impersonate security role: #{user_to_impersonate.security_role&.name || 'none'}"
 
   # Store original state for restoration
   @impersonation_state = {
@@ -271,24 +288,24 @@ def service_account_impersonator(user_or_reset)
     original_permissions: original_permissions,
     original_team_memberships: original_team_memberships,
     original_security_role: original_security_role,
-    target_user: target_user
+    user_to_impersonate: user_to_impersonate
   }
 
   # Clear and copy permissions
   service_user.permissions.clear
-  target_user.permissions.each { |permission| service_user.permissions << permission }
+  user_to_impersonate.permissions.each { |permission| service_user.permissions << permission }
 
   # Clear and copy team memberships
   service_user.team_memberships.destroy_all
-  target_user.team_memberships.each do |tm|
+  user_to_impersonate.team_memberships.each do |tm|
     service_user.team_memberships.create!(team: tm.team, role: tm.role)
   end
 
   # Copy security role
-  service_user.update!(security_role: target_user.security_role)
+  service_user.update!(security_role: user_to_impersonate.security_role)
 
   puts ""
-  puts "✅ Service account now impersonating #{target_user.name}"
+  puts "✅ Service account now impersonating #{user_to_impersonate.name}"
   puts "  - Permissions: #{service_user.permissions.count}"
   puts "  - Team memberships: #{service_user.team_memberships.count}"
   puts "  - Security role: #{service_user.security_role&.name || 'none'}"

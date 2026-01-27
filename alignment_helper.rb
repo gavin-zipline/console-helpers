@@ -28,15 +28,17 @@ def alignment_cheatsheet
   latest_user = latest_alignment_file(:user, prompt: false)
 
   puts "\n🚀🚀🚀 ALIGNMENT HELPER — VERSION #{ALIGNMENT_HELPER_VERSION} 🚀🚀🚀"
-  puts "\n📘 Auto-loaded Variables:"
-  puts "• alignment_context → #{context_display}"
-  puts "• latest_alignment_file(:team) → Latest team alignment (ID: #{latest_team&.id || 'none'})"
-  puts "• latest_alignment_file(:user) → Latest user alignment (ID: #{latest_user&.id || 'none'})"
+  puts "\n📘 Instantiated Variables:"
+  puts "• alignment_context = #{context_display}"
+  # show id and date created_at
+  puts "• latest_alignment_file(:team) = Latest team alignment (ID: #{latest_team&.id || 'none'}, Created At: #{latest_team&.created_at || 'none'})"
+  puts "• latest_alignment_file(:user) = Latest user alignment (ID: #{latest_user&.id || 'none'}, Created At: #{latest_user&.created_at || 'none'})"
 
   puts "\n🧭 Context Controls:" \
     "\n• set_alignment_context(:user)    → Choose default alignment focus" \
     "\n• toggle_alignment_context        → Switch between user/team contexts" \
-    "\n• prompt_for_alignment_context    → Re-run the interactive prompt"
+    "\n• prompt_for_alignment_context    → Re-run the interactive prompt" \
+    "\n• Context options                 → :user (default), :team"
 
   puts "\n🔍 Query & Search:" \
     "\n• alignment_class(type = nil)   → Alignment::(User|Team)File::<Org> run class" \
@@ -68,7 +70,9 @@ def alignment_cheatsheet
     "\n• non_team_errors(alignment)     → Errors excluding missing team" \
     "\n• team_key_errors(alignment)     → Only team integration key errors" \
     "\n• errors_like(pattern)           → Regex search over error messages" \
-    "\n• errors_containing(fragment)    → ILIKE search over error messages"
+    "\n• errors_containing(fragment)    → ILIKE search over error messages" \
+    "\n   State filters                  → :failed, :executed, :unchanged" \
+    "\n   Type overrides                 → :user, :team"
 
   puts "\n🛠️ Utilities:" \
     "\n• reload_latest                  → Refresh cached latest alignments" \
@@ -126,12 +130,7 @@ def set_alignment_context(value = nil, quiet: false)
   @alignment_context
 end
 
-def toggle_alignment_context
-  current = resolve_alignment_type(nil, prompt: false) || :user
-  next_context = current == :team ? :user : :team
-  set_alignment_context(next_context)
-end
-
+# do not surfac in cheatsheet
 def prompt_for_alignment_context(force: true)
   previous = @alignment_context
 
@@ -188,6 +187,7 @@ def prompt_for_alignment_context(force: true)
 end
 
 # --------------------------------- shortcuts -------------------------------- #
+# NOTE: omit from cheatsheet.
 def alignment_class(type = nil)
   resolved = resolve_alignment_type(type)
   return unless resolved
@@ -196,6 +196,7 @@ def alignment_class(type = nil)
   locate_alignment_scoped_class(base, resolved)
 end
 
+# NOTE: omit from cheatsheet.
 def alignment_row_class(type = nil)
   resolved = resolve_alignment_type(type)
   return unless resolved
@@ -224,18 +225,6 @@ def alignments(state: nil, type: nil, prompt: true)
 rescue => e
   puts "❌ Error retrieving #{label.downcase} alignments: #{e.message}"
   nil
-end
-
-def ta(type = nil)
-  puts "ℹ️ ta delegates to alignment_class; prefer alignment_class(:team)." unless @ta_alias_notice
-  @ta_alias_notice = true
-  alignment_class(type || :team)
-end
-
-def ua(type = nil)
-  puts "ℹ️ ua delegates to alignment_row_class; prefer alignment_row_class(:user)." unless @ua_alias_notice
-  @ua_alias_notice = true
-  alignment_row_class(type || :user)
 end
 
 def failed_alignments(type: nil)

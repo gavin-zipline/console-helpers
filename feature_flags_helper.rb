@@ -397,6 +397,12 @@ def enable_feature_for_org(feature_flag)
   puts "✅ Enabled '#{feature_flag}' for organization: #{Organization.current.name}"
 end
 
+# Disables a feature flag for the current organization
+def disable_feature_for_org(feature_flag)
+  Flipper[feature_flag].disable(Organization.current)
+  puts "🚫 Disabled '#{feature_flag}' for organization: #{Organization.current.name}"
+end
+
 # Unified gate removal for user/team
 def remove_actor_gates(feature_flag, actor)
   actor_type = actor.is_a?(User) ? "User" : "Team"

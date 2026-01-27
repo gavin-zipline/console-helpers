@@ -1,7 +1,23 @@
+
+###############################################################################
+# Pipeline Helper
+# -----------------------------------------------------------------------------
+# Purpose: Console/debugging helpers for DynamicProvisioning pipelines.
+# Usage: Load via `gh("pipeline")` or `gh("pipelines")` then use `pipeline_cheatsheet` for docs.
+# Safety: Read-only, no destructive operations.
+#
+# Structure: Version constant, cheatsheet, registration, aliases, shortcuts, core methods, cheatsheet call.
+###############################################################################
+
 PIPELINE_HELPER_VERSION = "0.2.1"
-def pipeline_helper_cheatsheet
-  puts   "\n🚀🚀� PIPELINE HELPER — VERSION #{PIPELINE_HELPER_VERSION} 🚀🚀🚀"
-  puts "\n�📘 Pipeline Helper Cheatsheet:"
+require 'globalid'
+
+# -----------------------------------------------------------------------------
+# Cheatsheet (usage docs)
+# -----------------------------------------------------------------------------
+def pipeline_cheatsheet
+  puts   "\n🚀🚀🚀 PIPELINE HELPER — VERSION #{PIPELINE_HELPER_VERSION} 🚀🚀🚀"
+  puts "\n📘 Pipeline Helper Cheatsheet:"
   puts "\n📘 Pipeline Instance Methods:"
   puts "• pipeline.summary"
   puts "  → Pretty one-page summary of pipeline configuration, sources, transformations, and targets."
@@ -35,7 +51,14 @@ def pipeline_helper_cheatsheet
   puts "• Association-based: Follow associations from a base record"
   puts "• Currently only SmartQuery sources are supported"
 end
-ConsoleHelpers.register_helper("pipeline", PIPELINE_HELPER_VERSION, method(:pipeline_helper_cheatsheet))
+
+# Flexible cheatsheet naming
+alias pipeline_helper_cheatsheet pipeline_cheatsheet
+alias pipelines_cheatsheet pipeline_cheatsheet
+alias pipelines_helper_cheatsheet pipeline_cheatsheet
+
+# Register helper
+ConsoleHelpers.register_helper("pipeline", PIPELINE_HELPER_VERSION, method(:pipeline_cheatsheet))
 
 # --------------------------------- shortcuts -------------------------------- #
 def dp
@@ -54,6 +77,97 @@ def pipeline_helper_version
   puts "🧭 Pipeline Helper Version: #{PIPELINE_HELPER_VERSION}"
   PIPELINE_HELPER_VERSION
 end
+
+# -----------------------------------------------------------------------------
+# 🛠️ UTILITY METHODS
+# -----------------------------------------------------------------------------
+
+# Robust GID parsing (no DB)
+def gid_parse(gid_str)
+  return { gid: gid_str, app: nil, model: nil, id: nil, valid: false, error: "blank" } if gid_str.nil? || gid_str.to_s.strip.empty?
+  begin
+    gid = GlobalID.parse(gid_str)
+    if gid
+      { gid: gid_str, app: gid.app, model: gid.model_name, id: gid.model_id, valid: true, error: nil }
+    else
+      { gid: gid_str, app: nil, model: nil, id: nil, valid: false, error: "parse_failed" }
+    end
+  rescue => e
+    { gid: gid_str, app: nil, model: nil, id: nil, valid: false, error: e.message }
+  end
+end
+
+# Optional GID resolution (DB allowed, safe)
+def gid_resolve(gid_str)
+  parsed = gid_parse(gid_str)
+  begin
+    obj = GlobalID::Locator.locate(gid_str)
+    label = if obj.respond_to?(:name) && obj.name.present?
+      obj.name
+    elsif obj.respond_to?(:title) && obj.title.present?
+      obj.title
+    elsif obj.respond_to?(:email) && obj.email.present?
+      obj.email
+    else
+      nil
+    end
+    parsed.merge(
+      located: obj.present?,
+      located_class: obj&.class&.name,
+      located_id: obj&.id,
+      located_label: label
+    )
+  rescue => e
+    parsed.merge(located: false, located_class: nil, located_id: nil, located_label: nil, error: e.message)
+  end
+end
+
+
+# Inspect DynamicProvisioning::Target rows for a transformation
+def dp_targets(transformation_id:, limit: 20, resolve: false)
+  begin
+    klass = defined?(DynamicProvisioning::Target) ? DynamicProvisioning::Target : Object.const_get('DynamicProvisioning::Target')
+    targets = klass.unscoped.where(transformation_id: transformation_id).order(created_at: :desc).limit(limit)
+    targets.map do |t|
+      {
+        id: t.id,
+        transformation_id: t.transformation_id,
+        created_at: t.created_at,
+        deleted_at: t.deleted_at,
+        source: (resolve ? gid_resolve(t.source) : gid_parse(t.source)),
+        target: (resolve ? gid_resolve(t.target) : gid_parse(t.target))
+      }
+    end
+  rescue => e
+    puts "[dp_targets] Error: #{e.message}"
+    []
+  end
+end
+
+# Convenience wrappers for source/target filtering
+def dp_targets_for_source(transformation_id:, source_gid:, limit: 20, resolve: false)
+  dp_targets(transformation_id: transformation_id, limit: limit, resolve: resolve).select { |row| row[:source][:gid] == source_gid }
+end
+
+def dp_targets_for_target(transformation_id:, target_gid:, limit: 20, resolve: false)
+  dp_targets(transformation_id: transformation_id, limit: limit, resolve: resolve).select { |row| row[:target][:gid] == target_gid }
+end
+
+# Pretty-printer for GIDs
+def pp_gid(gid_str, resolve: false)
+  begin
+    info = resolve ? gid_resolve(gid_str) : gid_parse(gid_str)
+    base = "#{info[:model] || 'Unknown'} #{info[:id] || '-'}"
+    if resolve && info[:located_label]
+      "#{base} (#{info[:located_label]})"
+    else
+      base
+    end
+  rescue => e
+    "[invalid GID: #{e.message}]"
+  end
+end
+
 class DynamicProvisioning::Pipeline
   def to_mermaid_diagram
     <<~DIAGRAM.strip
@@ -65,9 +179,12 @@ class DynamicProvisioning::Pipeline
       #{requirements.map(&:to_mermaid_relation).join("\n")}
     DIAGRAM
   end
+
   def generate
     DynamicProvisioning::RunPipelineJob.perform_async(id)
   end
+
+  # Summary: print targets using gid_parse (no DB)
   def summary
     <<~SUMMARY
       ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -90,9 +207,37 @@ class DynamicProvisioning::Pipeline
       #{transformations.map { |t| format_transformation(t) }.join("\n")}
 
       ── TARGETS (#{targets.size}) ─────────────────────
-      #{targets.map { |t| "• Team #{extract_gid_id(t.source)} → #{extract_gid_id(t.target)}" }.join("\n")}
+      #{targets.map { |t|
+        src = gid_parse(t.source)
+        tgt = gid_parse(t.target)
+        "• #{src[:model] || 'Unknown'} #{src[:id]} → #{tgt[:model] || 'Unknown'} #{tgt[:id]}"
+      }.join("\n")}
     SUMMARY
   end
+
+  # Verbose summary: print targets using gid_resolve (DB allowed)
+  def summary_verbose(limit: 50)
+    shown = targets.first(limit)
+    <<~SUMMARY
+      ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+      ┃         PIPELINE SUMMARY (VERBOSE)   ┃
+      ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+      Name:        #{name}
+      ID:          #{id}
+      Active:      #{deleted_at.nil? ? 'Yes' : 'No'}
+      Created At:  #{created_at.strftime('%Y-%m-%d %H:%M:%S')}
+      Updated At:  #{updated_at.strftime('%Y-%m-%d %H:%M:%S')}
+
+      ── TARGETS (showing #{shown.size} of #{targets.size}) ─────────────
+      #{shown.map { |t|
+        src = gid_resolve(t.source)
+        tgt = gid_resolve(t.target)
+        "• #{src[:model] || 'Unknown'} #{src[:id]}#{src[:located_label] ? " (#{src[:located_label]})" : ""} → #{tgt[:model] || 'Unknown'} #{tgt[:id]}#{tgt[:located_label] ? " (#{tgt[:located_label]})" : ""}"
+      }.join("\n")}
+    SUMMARY
+  end
+
 
   def target_objects
     targets.map { |t| GlobalID::Locator.locate(t.target) }.compact
