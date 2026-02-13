@@ -98,12 +98,53 @@ user_helper_cheatsheet
 Local Development → GitHub repo → Remote Rails Console
 ```
 
+## Deployment
+
+### GitHub Repository
+
+Helpers are deployed to: `https://github.com/gavin-zipline/console-helpers`
+
+### Deployment Process
+
+1. Develop and test your helper locally
+2. Use `deploy_to_gist.sh` or `helper_workflow.rb` to deploy to GitHub
+3. Load in remote console via `gh("helper_name")`
+
+The `gh()` function (defined in `console_helper.rb`) fetches helpers from:
+```
+https://raw.githubusercontent.com/gavin-zipline/console-helpers/main/{helper_name}_helper.rb
+```
+
+## Helper Development Tips
+
+### Output Control
+
+Use `disable_return_printing` and `enable_return_printing` to control console output:
+
+```ruby
+def some_bulk_operation(items)
+  disable_return_printing if defined?(disable_return_printing)
+
+  # ... perform operations ...
+  # (prevents large return values from cluttering console)
+
+  enable_return_printing if defined?(enable_return_printing)
+  items  # Return the result
+end
+```
+
+**When to use:**
+- Bulk operations that return large datasets
+- Methods where the printed output is more useful than the return value
+- Operations that print their own summary/status messages
+
 ## Files
 
 - `*_helper.rb` - Individual helper files
 - `HELPER_TEMPLATE_*.rb` - Templates for new helpers
-  -- `deploy_to_repo.sh` - Deployment script
+- `deploy_to_gist.sh` - Deployment script
 - `helper_workflow.rb` - Management tool (links to main project)
+- `console_helper.rb` - Core helper with registry and `gh()` loader
 
 ---
 

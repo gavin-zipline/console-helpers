@@ -68,6 +68,11 @@ def workflow_helper_cheatsheet
 
     GUIDE
 end
+
+# Flexible cheatsheet naming - support multiple conventions for convenience
+alias workflows_cheatsheet workflow_helper_cheatsheet
+alias workflows_helper_cheatsheet workflow_helper_cheatsheet
+
 ConsoleHelpers.register_helper("workflow", WORKFLOW_HELPER_VERSION, method(:workflow_helper_cheatsheet))
 
   # ---------------------------------------------------------------------------- #

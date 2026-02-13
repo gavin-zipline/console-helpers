@@ -17,6 +17,10 @@ def user_helper_cheatsheet
   puts "• user.merge_all_bookmarks            → Merge all user's bookmarks to most recently joined team"
 end
 
+# Flexible cheatsheet naming - support multiple conventions for convenience
+alias users_cheatsheet user_helper_cheatsheet
+alias users_helper_cheatsheet user_helper_cheatsheet
+
 ConsoleHelpers.register_helper("user", USER_HELPER_VERSION, method(:user_helper_cheatsheet))
 
 # == User Console Helper ==
@@ -60,11 +64,11 @@ def find_user(param)
   return User.find_by(id: param) if param.is_a?(Integer)
 
   if param.is_a?(String)
-    return User.where("LOWER(email) = :val OR employee_number = :val OR LOWER(username) = :val", val: param.downcase)
+    return User.where("LOWER(email) = :val OR employee_number = :val OR LOWER(username) = :val", val: param.downcase).first
   end
 
   if param.is_a?(Hash)
-    return User.where(param)
+    return User.where(param).first
   end
 
   raise ArgumentError, "Unsupported input type for find_user: #{param.class}"

@@ -18,7 +18,7 @@
 
 # Registration and cheatsheet method must be at the top for convention compliance
 def [helper_name]_cheatsheet
-  puts "\n�🚀🚀 [HELPER_NAME] HELPER — VERSION #{[HELPER_NAME]_HELPER_VERSION} 🚀🚀🚀"
+  puts "\n🚀🚀🚀 [HELPER_NAME] HELPER — VERSION #{[HELPER_NAME]_HELPER_VERSION} 🚀🚀🚀"
   puts "\n📘 [Helper Name] Helper Cheatsheet:"
   # ...
 end
