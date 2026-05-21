@@ -1,4 +1,4 @@
-CONSOLE_HELPER_VERSION = "0.3.34"
+CONSOLE_HELPER_VERSION = "0.3.35"
 def console_cheatsheet
   puts "\n🧪 Console Helper Cheatsheet"
   puts "• list_recent_history(count = 25) or lrh(count = 25)"
@@ -20,6 +20,9 @@ def console_cheatsheet
   puts ""
   puts "• service_account_impersonator(user) → Copy user's permissions, team_memberships, and security_role to service account for testing"
   puts "• service_account_impersonator(:reset) → Restore service account's original state"
+  puts ""
+  puts "• data_age (or da)"
+  puts "  → Prints a sentence describing how current the console data is, based on the most recent EventStream::Event."
 end
 
 def cheatsheet
@@ -682,6 +685,17 @@ class Hash
     end
   end
 end
+
+def data_age
+  event = EventStream::Event.last
+  if event
+    age = ActionView::Base.new.distance_of_time_in_words(event.created_at, Time.current)
+    puts "Data is current as of #{event.created_at.strftime('%Y-%m-%d %H:%M:%S UTC')} (#{age} ago)."
+  else
+    puts "No EventStream::Event records found — data age unknown."
+  end
+end
+alias :da :data_age
 
 enable_return_printing if defined?(enable_return_printing)
 cheatsheet
