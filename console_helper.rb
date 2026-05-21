@@ -1,4 +1,4 @@
-CONSOLE_HELPER_VERSION = "0.3.35"
+CONSOLE_HELPER_VERSION = "0.3.36"
 def console_cheatsheet
   puts "\n🧪 Console Helper Cheatsheet"
   puts "• list_recent_history(count = 25) or lrh(count = 25)"
@@ -689,7 +689,16 @@ end
 def data_age
   event = EventStream::Event.last
   if event
-    age = ActionView::Base.new.distance_of_time_in_words(event.created_at, Time.current)
+    diff = (Time.current - event.created_at).to_i
+    age = if diff < 60
+      "#{diff} seconds"
+    elsif diff < 3600
+      "#{diff / 60} minutes"
+    elsif diff < 86400
+      "#{diff / 3600} hours"
+    else
+      "#{diff / 86400} days"
+    end
     puts "Data is current as of #{event.created_at.strftime('%Y-%m-%d %H:%M:%S UTC')} (#{age} ago)."
   else
     puts "No EventStream::Event records found — data age unknown."
