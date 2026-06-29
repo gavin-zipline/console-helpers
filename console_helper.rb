@@ -1,4 +1,4 @@
-CONSOLE_HELPER_VERSION = "0.3.36"
+CONSOLE_HELPER_VERSION = "0.3.37"
 def console_cheatsheet
   puts "\n🧪 Console Helper Cheatsheet"
   puts "• list_recent_history(count = 25) or lrh(count = 25)"
@@ -23,6 +23,8 @@ def console_cheatsheet
   puts ""
   puts "• data_age (or da)"
   puts "  → Prints a sentence describing how current the console data is, based on the most recent EventStream::Event."
+  puts ""
+  puts "• keep_alive → Keeps session alive; auto-exits after 2 hours of inactivity (runs on load)"
 end
 
 def cheatsheet
@@ -705,6 +707,20 @@ def data_age
   end
 end
 alias :da :data_age
+
+$last_active = Time.now
+IRB.conf[:IRB_RC] = proc { $last_active = Time.now }
+
+def keep_alive
+  Thread.new do
+    loop do
+      sleep 60
+      break if Time.now - $last_active > 7200
+      print "."
+    end
+  end
+end
+keep_alive
 
 enable_return_printing if defined?(enable_return_printing)
 cheatsheet
