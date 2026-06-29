@@ -1,4 +1,4 @@
-CONSOLE_HELPER_VERSION = "0.3.37"
+CONSOLE_HELPER_VERSION = "0.3.38"
 def console_cheatsheet
   puts "\n🧪 Console Helper Cheatsheet"
   puts "• list_recent_history(count = 25) or lrh(count = 25)"
@@ -22,7 +22,7 @@ def console_cheatsheet
   puts "• service_account_impersonator(:reset) → Restore service account's original state"
   puts ""
   puts "• data_age (or da)"
-  puts "  → Prints a sentence describing how current the console data is, based on the most recent EventStream::Event."
+  puts "  → Prints a sentence describing how current the console data is. Uses EventStream::Event if available, falls back to Audited::Audit (works on Draco where EventStream is not replicated)."
   puts ""
   puts "• keep_alive → Keeps session alive; auto-exits after 2 hours of inactivity (runs on load)"
 end
@@ -688,23 +688,34 @@ class Hash
   end
 end
 
-def data_age
-  event = EventStream::Event.last
-  if event
-    diff = (Time.current - event.created_at).to_i
-    age = if diff < 60
-      "#{diff} seconds"
-    elsif diff < 3600
-      "#{diff / 60} minutes"
-    elsif diff < 86400
-      "#{diff / 3600} hours"
-    else
-      "#{diff / 86400} days"
-    end
-    puts "Data is current as of #{event.created_at.strftime('%Y-%m-%d %H:%M:%S UTC')} (#{age} ago)."
+def _data_age_print(ts, source)
+  diff = (Time.current - ts).to_i
+  age = if diff < 60
+    "#{diff} seconds"
+  elsif diff < 3600
+    "#{diff / 60} minutes"
+  elsif diff < 86400
+    "#{diff / 3600} hours"
   else
-    puts "No EventStream::Event records found — data age unknown."
+    "#{diff / 86400} days"
   end
+  puts "Data is current as of #{ts.strftime('%Y-%m-%d %H:%M:%S UTC')} (#{age} ago) [source: #{source}]."
+end
+
+def data_age
+  event_ts = defined?(EventStream::Event) && EventStream::Event.last&.created_at
+  if event_ts
+    _data_age_print(event_ts, "EventStream::Event")
+    return
+  end
+
+  audit_ts = defined?(Audited::Audit) && Audited::Audit.order(created_at: :desc).first&.created_at
+  if audit_ts
+    _data_age_print(audit_ts, "Audited::Audit")
+    return
+  end
+
+  puts "Data age unknown — no EventStream::Event or Audited::Audit records found."
 end
 alias :da :data_age
 
