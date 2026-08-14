@@ -541,7 +541,6 @@ alias :shi :show_history_item
 
 SHORTCUTS = {
   org: -> { Organization.current.shortname },
-  so:  -> { switch_org },
   usc: -> { unsafe_console! },
   sc:  -> { safe_console! },
   erp: -> { enable_return_printing },
@@ -554,6 +553,19 @@ SHORTCUTS = {
 
 SHORTCUTS.each do |method_name, proc_blk|
   define_method(method_name, &proc_blk)
+end
+
+# Switch orgs. With no argument, falls back to the interactive company helper.
+# With a shortname, switches directly so the call is safe inside a pasted block
+# (the interactive prompt would otherwise eat the next line of the paste).
+def so(shortname = nil)
+  return switch_org if shortname.nil?
+
+  choice = shortname.to_s.strip.downcase
+  return false unless handle_choice(choice)
+
+  asciify(choice)
+  true
 end
 
 def variablize_class_map

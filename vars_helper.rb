@@ -7,7 +7,8 @@ def vars_helper_cheatsheet
   puts "• init!                       → Injects variables into the top-level binding"
   puts "• vars                        → Displays summary table of initialized variables"
   puts "• org                         → Current org shortname"
-  puts "• so / switch_org             → Switch org"
+  puts "• so(\"shortname\")             → Switch org directly (paste-safe)"
+  puts "• so / switch_org             → Switch org (interactive prompt)"
   puts "• usc / sc                    → Unsafe/safe console modes"
   puts "• erp / drp                   → Enable/disable return printing"
 end
@@ -29,7 +30,8 @@ def vars_helper_cheatsheet
   puts "• init!                       → Injects variables into the top-level binding"
   puts "• vars                        → Displays summary table of initialized variables"
   puts "• org                         → Current org shortname"
-  puts "• so / switch_org             → Switch org"
+  puts "• so(\"shortname\")             → Switch org directly (paste-safe)"
+  puts "• so / switch_org             → Switch org (interactive prompt)"
   puts "• usc / sc                    → Unsafe/safe console modes"
   puts "• erp / drp                   → Enable/disable return printing"
 end
@@ -89,8 +91,17 @@ def org
   Organization.current.shortname
 end
 
-def so
-  switch_org
+# Switch orgs. With no argument, falls back to the interactive company helper.
+# With a shortname, switches directly so the call is safe inside a pasted block
+# (the interactive prompt would otherwise eat the next line of the paste).
+def so(shortname = nil)
+  return switch_org if shortname.nil?
+
+  choice = shortname.to_s.strip.downcase
+  return false unless handle_choice(choice)
+
+  asciify(choice)
+  true
 end
 
 def usc
