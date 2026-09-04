@@ -1,4 +1,4 @@
-CONSOLE_HELPER_VERSION = "0.3.38"
+CONSOLE_HELPER_VERSION = "0.4.0"
 def console_cheatsheet
   puts "\n🧪 Console Helper Cheatsheet"
   puts "• list_recent_history(count = 25) or lrh(count = 25)"
@@ -21,8 +21,14 @@ def console_cheatsheet
   puts "• service_account_impersonator(user) → Copy user's permissions, team_memberships, and security_role to service account for testing"
   puts "• service_account_impersonator(:reset) → Restore service account's original state"
   puts ""
-  puts "• data_age (or da)"
-  puts "  → Prints a sentence describing how current the console data is. Uses EventStream::Event if available, falls back to Audited::Audit (works on Draco where EventStream is not replicated)."
+  puts "• data_age (or da) / data_age(fast: true)"
+  puts "  → Answers TWO questions separately, leading with a verdict: LIVE TENANT / STUB / EMPTY / UNCERTAIN."
+  puts "    IDENTITY  (row counts)      → is this the real tenant, or a stub / frozen clone / empty schema?"
+  puts "    FRESHNESS (max timestamps)  → how current is the data?"
+  puts "    Samples User, Team, Communication, Task, EventStream::Event, Audited::Audit and shows where"
+  puts "    they disagree. Counts are capped at #{DATA_AGE_COUNT_CAP}; timestamps are best-effort under a #{DATA_AGE_TIME_BUDGET.to_i}s budget."
+  puts "    fast: true skips timestamps (identity only). Returns the verdict symbol."
+  puts "    NOT a clearance check — still count the domain model you care about yourself."
   puts ""
   puts "• keep_alive → Keeps session alive; auto-exits after 2 hours of inactivity (runs on load)"
 end
@@ -700,34 +706,305 @@ class Hash
   end
 end
 
-def _data_age_print(ts, source)
-  diff = (Time.current - ts).to_i
-  age = if diff < 60
-    "#{diff} seconds"
-  elsif diff < 3600
-    "#{diff / 60} minutes"
-  elsif diff < 86400
-    "#{diff / 3600} hours"
-  else
-    "#{diff / 86400} days"
-  end
-  puts "Data is current as of #{ts.strftime('%Y-%m-%d %H:%M:%S UTC')} (#{age} ago) [source: #{source}]."
+# == DATA AGE / TENANT IDENTITY ==
+#
+# `da` answers two separate questions and labels which is which:
+#
+#   IDENTITY  — is this the real tenant, or a stub / frozen clone / empty schema?
+#               Answered by ROW COUNTS. A stub has single-digit users and no content.
+#   FRESHNESS — how current is the data?
+#               Answered by MAX TIMESTAMPS, sampled across several models.
+#
+# The old single-source, single-timestamp version could not tell either question
+# apart from a healthy tenant, and failed in both directions:
+#
+#   Over-reporting  — INT-2397 (2026-08-18): the staging `kavehome` schema is a
+#                     pre-migration stub (0 training files, 2 users), but
+#                     Audited::Audit carried a 2026-07-31 timestamp from the clone
+#                     itself. `da` printed "current as of 2026-07-31 (18 days ago)"
+#                     and read as a live tenant snapshot. Kave Home exists twice —
+#                     `internal` on primary, `customer` on eu-west-1 — and staging
+#                     clones primary, so staging gets the stub.
+#   Under-reporting — Draco does not replicate EventStream::Event, so the fallback
+#                     to Audited::Audit reported data far staler than it was and
+#                     usable data got dismissed.
+#
+# Sampling several models fixes both: disagreement between sources is itself the
+# signal, so it is printed rather than collapsed into one number.
+
+DATA_AGE_COUNT_CAP        = 1_000  # bounded COUNT ceiling — "1000+" is enough to settle identity
+DATA_AGE_MIN_LIVE_USERS   = 10     # fewer than this => never LIVE
+DATA_AGE_PROBE_TIMEOUT_MS = 3_000  # per-query statement_timeout
+DATA_AGE_TIME_BUDGET      = 12.0   # total seconds for timestamp probes; the rest are skipped
+DATA_AGE_SKEW_DAYS        = 7      # source disagreement wider than this gets called out
+
+# [model name, role, note]
+DATA_AGE_PROBES = [
+  ["User",               :identity,  nil],
+  ["Team",               :identity,  nil],
+  ["Communication",      :freshness, nil],
+  ["Task",               :volume,    "count only — team_tasks has no created_at index"],
+  ["EventStream::Event", :freshness, "not replicated on Draco"],
+  ["Audited::Audit",     :freshness, "can carry clone-artifact timestamps — see INT-2397"]
+].freeze
+
+# Timestamp probes run in this order so the best freshness signals get the budget
+# first. Task is absent on purpose: MAX(created_at) on team_tasks is a sequential
+# scan over the largest table in the schema and would burn the whole budget.
+DATA_AGE_TIME_ORDER = ["Communication", "EventStream::Event", "Audited::Audit", "User", "Team"].freeze
+
+def _da_klass(name)
+  Object.const_get(name)
+rescue StandardError
+  nil
 end
 
-def data_age
-  event_ts = defined?(EventStream::Event) && EventStream::Event.last&.created_at
-  if event_ts
-    _data_age_print(event_ts, "EventStream::Event")
-    return
+# Read-only probe with a hard statement timeout, so one slow table degrades to
+# "timeout" in the table instead of hanging a session-opening command.
+def _da_guarded(&block)
+  ActiveRecord::Base.transaction(requires_new: true) do
+    ActiveRecord::Base.connection.execute("SET LOCAL statement_timeout = #{DATA_AGE_PROBE_TIMEOUT_MS.to_i}")
+    block.call
+  end
+rescue ActiveRecord::QueryCanceled
+  :timeout
+rescue StandardError => e
+  e
+end
+
+def _da_age_short(ts)
+  return "—" if ts.nil?
+
+  diff = (Time.current - ts).to_i
+  return "#{diff}s" if diff < 60
+  return "#{diff / 60}m" if diff < 3600
+  return "#{diff / 3600}h" if diff < 86_400
+
+  "#{diff / 86_400}d"
+end
+
+def _da_age_words(ts)
+  diff = (Time.current - ts).to_i
+  return "#{diff} seconds" if diff < 60
+  return "#{diff / 60} minutes" if diff < 3600
+  return "#{diff / 3600} hours" if diff < 86_400
+
+  "#{diff / 86_400} days"
+end
+
+def _da_stamp(value)
+  case value
+  when nil       then "—"
+  when :timeout  then "timeout"
+  when :skipped  then "skipped"
+  when :nocolumn then "n/a"
+  when StandardError then "error"
+  else "#{value.utc.strftime('%Y-%m-%d %H:%M')} (#{_da_age_short(value)})"
+  end
+end
+
+def _da_rows(probe)
+  return "—" if probe[:count].nil?
+  return "error" if probe[:count].is_a?(StandardError) || probe[:count] == :timeout
+
+  probe[:capped] ? "#{DATA_AGE_COUNT_CAP}+" : probe[:count].to_s
+end
+
+def _da_time?(value)
+  value.is_a?(Time) || (defined?(ActiveSupport::TimeWithZone) && value.is_a?(ActiveSupport::TimeWithZone))
+end
+
+# [[source name, timestamp], ...] for every probe that produced a usable time.
+def _da_stamps_for(probes)
+  probes.flat_map { |p| [[p[:name], p[:created]], [p[:name], p[:updated]]] }
+        .select { |_, v| _da_time?(v) }
+end
+
+def _da_newest(probe)
+  return nil if probe.nil?
+
+  [probe[:created], probe[:updated]].select { |v| _da_time?(v) }.max
+end
+
+def _da_verdict(counts)
+  users = counts["User"]
+  teams = counts["Team"]
+  comms = counts["Communication"]
+  return :uncertain unless users.is_a?(Integer) && comms.is_a?(Integer)
+
+  return :empty if users.zero? && comms.zero? && (!teams.is_a?(Integer) || teams.zero?)
+  return :stub  if users < DATA_AGE_MIN_LIVE_USERS || comms.zero?
+
+  :live
+end
+
+DATA_AGE_VERDICT_LABELS = {
+  live:      "LIVE TENANT",
+  stub:      "STUB",
+  empty:     "EMPTY",
+  uncertain: "UNCERTAIN"
+}.freeze
+
+def _da_identity_line
+  org = begin
+    Organization.current
+  rescue StandardError
+    nil
+  end
+  schema = begin
+    Apartment::Tenant.current
+  rescue StandardError
+    "unknown"
+  end
+  [org, schema]
+end
+
+# fast: true skips every timestamp probe and answers identity only.
+def data_age(fast: false)
+  started = Time.now
+  org, schema = _da_identity_line
+
+  probes = DATA_AGE_PROBES.map do |name, role, note|
+    { name: name, role: role, note: note, klass: _da_klass(name) }
   end
 
-  audit_ts = defined?(Audited::Audit) && Audited::Audit.order(created_at: :desc).first&.created_at
-  if audit_ts
-    _data_age_print(audit_ts, "Audited::Audit")
-    return
+  # --- IDENTITY: bounded counts. Always run; cheap and the only reliable stub test.
+  probes.each do |probe|
+    if probe[:klass].nil?
+      probe[:count] = nil
+      probe[:note] = [probe[:note], "model not defined in this tenant"].compact.join("; ")
+      next
+    end
+
+    result = _da_guarded { probe[:klass].limit(DATA_AGE_COUNT_CAP).count }
+    probe[:count]  = result
+    probe[:capped] = result.is_a?(Integer) && result >= DATA_AGE_COUNT_CAP
   end
 
-  puts "Data age unknown — no EventStream::Event or Audited::Audit records found."
+  counts = probes.each_with_object({}) { |p, h| h[p[:name]] = p[:count] }
+  verdict = _da_verdict(counts)
+
+  # --- FRESHNESS: best-effort max timestamps under a shared budget.
+  probes.each { |p| p[:created] = p[:updated] = (fast ? :skipped : nil) }
+
+  unless fast
+    DATA_AGE_TIME_ORDER.each do |name|
+      probe = probes.find { |p| p[:name] == name }
+      next if probe.nil? || probe[:klass].nil?
+
+      %i[created updated].each do |field|
+        column = "#{field}_at"
+
+        unless probe[:klass].column_names.include?(column)
+          probe[field] = :nocolumn
+          next
+        end
+
+        if Time.now - started > DATA_AGE_TIME_BUDGET
+          probe[field] = :skipped
+          next
+        end
+
+        probe[field] = _da_guarded { probe[:klass].maximum(column) }
+      end
+    end
+  end
+
+  # --- OUTPUT
+  label   = DATA_AGE_VERDICT_LABELS[verdict]
+  org_type = org&.type
+  title   = org ? "#{org.shortname} — #{org.full_name}" : schema.to_s
+  header  = "  #{label}   #{title}#{org_type ? "  [#{org_type}]" : ''}"
+  rule    = "=" * [header.length + 2, 78].max
+
+  puts ""
+  puts rule
+  puts header
+  puts rule
+
+  meta = ["schema: #{schema}", "env: #{Rails.env}"]
+  meta << "org id: #{org.id}" if org
+  meta << "go-live: #{org.go_live_on}" if org&.go_live_on
+  meta << "DISABLED" if org.respond_to?(:disabled?) && org&.disabled?
+  puts "  #{meta.join('   ')}"
+
+  if org
+    puts "  public.organizations cached counters: user_count=#{org.user_count.inspect} " \
+         "store_count=#{org.store_count.inspect}  (maintained outside this schema — compare to ROWS below)"
+  end
+
+  row_format = "  %-20s %-10s %-7s %-23s %-23s"
+  puts ""
+  puts format(row_format, "MODEL", "ROLE", "ROWS", "NEWEST created_at", "NEWEST updated_at")
+  puts "  #{'-' * 83}"
+  probes.each do |probe|
+    puts format(
+      row_format,
+      probe[:name],
+      probe[:role],
+      _da_rows(probe),
+      _da_stamp(probe[:created]),
+      _da_stamp(probe[:updated])
+    )
+  end
+
+  notes = probes.reject { |p| p[:note].to_s.empty? }
+  unless notes.empty?
+    puts ""
+    notes.each { |p| puts "  · #{p[:name]}: #{p[:note]}" }
+  end
+
+  # Headline freshness: newest timestamp seen anywhere, named by its source.
+  stamps = _da_stamps_for(probes)
+  puts ""
+  if stamps.empty?
+    puts "  Freshness: unknown — no usable timestamp landed#{fast ? ' (fast: true skips timestamps)' : ''}."
+  else
+    src, newest = stamps.max_by { |_, v| v }
+    puts "  Freshness: newest row anywhere is #{newest.utc.strftime('%Y-%m-%d %H:%M:%S UTC')} " \
+         "(#{_da_age_words(newest)} ago) [#{src}]."
+
+    # Skew is measured across freshness-role sources only. Comparing them to User
+    # or Team would fire on every healthy tenant — "no new teams in 9 days" is normal.
+    fresh = _da_stamps_for(probes.select { |p| p[:role] == :freshness })
+    if fresh.length > 1
+      _, f_new = fresh.max_by { |_, v| v }
+      _, f_old = fresh.min_by { |_, v| v }
+      if (f_new - f_old) > DATA_AGE_SKEW_DAYS.days
+        puts "  ⚠️  Freshness sources disagree by #{((f_new - f_old) / 1.day).round} days — " \
+             "do not trust a single row above."
+      end
+    end
+
+    audit_ts = _da_newest(probes.find { |p| p[:name] == "Audited::Audit" })
+    cont_ts  = _da_newest(probes.find { |p| p[:name] == "Communication" })
+    if audit_ts && (cont_ts.nil? || (audit_ts - cont_ts) > DATA_AGE_SKEW_DAYS.days)
+      puts "  ⚠️  Audit trail is newer than tenant content. That is the clone-artifact shape " \
+           "from INT-2397 — the audit timestamp is probably the copy, not tenant activity."
+    end
+  end
+
+  if org && org_type && org_type != "customer"
+    puts ""
+    puts "  ⚠️  This org is type `#{org_type}`, not `customer`. A live customer tenant of the same"
+    puts "      shortname may exist on another cluster (Kave Home: `internal` on primary,"
+    puts "      `customer` on eu-west-1). Check DbListOrganizationsTool / the admin Jumper before"
+    puts "      concluding anything about the customer from this schema."
+  end
+
+  if verdict != :live
+    puts ""
+    puts "  ⚠️  #{label} — do NOT draw customer conclusions from this schema. " \
+         "Threshold: <#{DATA_AGE_MIN_LIVE_USERS} users or 0 communications is never LIVE."
+  end
+
+  puts ""
+  puts "  Probed in #{(Time.now - started).round(1)}s. Counts are capped at #{DATA_AGE_COUNT_CAP} (\"#{DATA_AGE_COUNT_CAP}+\" means at least that many)."
+  puts "  LIMIT: this is a tenant-level check only. It cannot tell you whether the domain you"
+  puts "         care about has data — INT-2397's actual blocker was Training::File.count == 0"
+  puts "         on a schema that looked fine. Count your own model before concluding."
+  puts ""
+  verdict
 end
 alias :da :data_age
 
